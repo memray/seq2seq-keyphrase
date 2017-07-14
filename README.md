@@ -12,14 +12,14 @@ Note that the model is trained on scientific papers (abstract and keyword) in Co
 Run
 ==========
 
-#### Entry and Settings
+### Entry and Settings
 The main entry of the project is placed in `keyphrase/keyphrase_copynet.py`
 
 All the primary settings are stored in `keyphrase/config.py`. 
 
 Some scripts for data processing are placed in `keyphrase/dataset/`. 
 
-#### Before running...
+### Before running...
 Before running the code, please download this [file](http://crystal.exp.sis.pitt.edu:8080/iris/data/experiment_dataset.zip), unzip it to the project directory and overwrite the `Experiment/` and `dataset/`. 
 
 `Experiment/` contains one pre-trained copy-seq2seq model *(experiments.keyphrase-all.one2one.copy.id=20170106-025508.epoch=4.batch=1000.pkl)* used in the paper, based on which you can extract keyphrases for your own corpus.
@@ -30,21 +30,21 @@ Besides there are some output examples in this folder.
    * `testing-data` contains the original testing datasets, and they are further processed into folder `baseline-data`.
    * `baseline-data` stores the cleaned and processed testing datasets, and will be used during predicting and evaluating. Specifically, for each dataset, there's one `text` folder contains the content of paper after POS-tagging, and another `keyphrase` folder contains the ground-truth keyphrases, listed one phrase per line.
 
-#### Train
+### Train
 If you want to train a new model, set *config['do_train'] = True* and *config['trained_model'] = ''*  in `keyphrase/config.py`. 
 
 If the *config['trained_model']* is not empty, it will load the trained model first and resume training. 
 
  Also, there are some parameters you can try out, like *config['copynet'] = False* means to train a normal GRU-based Seq2seq model.
 
-#### Extract keyphrases
+### Extract keyphrases
 Set *config['do_predict'] = True* and *config['testing_datasets']=['data_set1', 'data_set2' ...]* (datasets you wanna extract). The program will load the text from `dataset/baseline-data/` first, and save the prediction results into `config['predict_path']/predict.generative.dataset_name.pkl` and the extracted phrases into `dataset/keyphrase/prediction/`.
 
 Similarly, there are many parameters to tune the prediction of keyphrase.
 
 If you want to extract keyphrases from your own data using our model, you need to put your data in `baseline-data` following the same format, and implement a simple class in `keyphrase/dataset/keyphrase_test_dataset.py`.
 
-#### Test
+### Test
 Set *config['do_evaluate'] = True* and you'll see a lot of print-outs in the console and reports in `config['predict_path']`.
 
 
