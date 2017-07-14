@@ -50,7 +50,7 @@ Set *config['do_evaluate'] = True* and you'll see a lot of print-outs in the con
 
 Data
 ==========
-The training data mentioned above is pickled. If you are interested in using the KP20k dataset only, you can get the data from [here](http://crystal.exp.sis.pitt.edu:8080/iris/data/ke20k.zip). 
+The training data mentioned above is pickled. If you are just interested in using the KP20k dataset, you can get the data from [here](http://crystal.exp.sis.pitt.edu:8080/iris/data/kp20k.zip). 
 
 The KP20k dataset is released in JSON format. Each data point contains the title, abstract and keywords of a paper.
 
