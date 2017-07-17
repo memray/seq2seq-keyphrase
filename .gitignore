@@ -1,6 +1,8 @@
 # added by memray
 /.idea/
-
+/Experiment/
+/dataset/
+/stanford-postagger/
 .DS_Store
 
 # Byte-compiled / optimized / DLL files

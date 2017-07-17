@@ -58,7 +58,7 @@ def evaluate_multiple(config, test_set, inputs, outputs,
     # reload the targets from corpus directly
     # target_dir = config['baseline_data_path'] + dataset_name + '/keyphrase/'
 
-    test_set['source_postag'] = test_set['target_str']
+    # test_set['source_postag'] = test_set['target_str']
 
     # for input_sentence, target_list, predict_list, score_list in zip(inputs, original_outputs, samples, scores):
     for doc_name, source_str, input_sentence, target_list, predict_list, score_list, postag_list in zip(doc_names, test_set['source_str'], inputs, test_set['target_str'], samples, scores, test_set['source_postag']):

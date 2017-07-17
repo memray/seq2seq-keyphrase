@@ -180,8 +180,8 @@ def get_none_phrases(source_text, source_postag, max_len):
     np_regex = r'^(JJ|JJR|JJS|VBG|VBN)*(NN|NNS|NNP|NNPS|VBG)+$'
     np_list = []
 
-    for i in range(len(source_text)-1):
-        for j in range(i+1, len(source_text)):
+    for i in range(len(source_text)):
+        for j in range(i+1, len(source_text)+1):
             if j-i > max_len:
                 continue
             if j-i == 1 and (source_text[i:j]=='<digit>' or len(source_text[i:j][0])==1):

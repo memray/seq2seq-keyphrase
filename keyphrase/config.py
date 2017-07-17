@@ -27,8 +27,8 @@ def setup_keyphrase_all():
     Experiment process
     '''
     # do training?
-    # config['do_train']        = True
-    config['do_train']        = False
+    config['do_train']        = True
+    # config['do_train']        = False
 
     # do quick-testing (while training)?
     config['do_quick_testing']     = True
