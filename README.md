@@ -52,7 +52,9 @@ The performances reported in the paper is done by `keyphrase/baseline/evaluate.p
 
 Data
 ==========
-The training data mentioned above is pickled. If you are just interested in using the KP20k dataset, you can get the data from [here](http://crystal.exp.sis.pitt.edu:8080/iris/data/kp20k.zip). 
+The training data mentioned above is pickled. You can download here [here](http://crystal.exp.sis.pitt.edu:8080/iris/data/experiment_dataset.zip). Just in case you are China Mainland where downloading this large file is painful, I provide another [link](http://pan.baidu.com/s/1b46mwY) on Baidu Pan Cloud Drive.
+
+If you are just interested in using the KP20k dataset, you can get the data from [here](http://crystal.exp.sis.pitt.edu:8080/iris/data/kp20k.zip). 
 
 The KP20k dataset is released in JSON format. Each data point contains the title, abstract and keywords of a paper.
 
