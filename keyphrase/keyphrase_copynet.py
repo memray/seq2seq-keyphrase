@@ -343,8 +343,9 @@ if __name__ == '__main__':
                 mini_data_t = []
                 while mini_data_idx < len(data_s):
                     if len(data_s[mini_data_idx]) * len(data_t[mini_data_idx]) >= max_size:
-                        logger.error('mini_mini_batch_length is too small')
-                        exit()
+                        logger.error('mini_mini_batch_length is too small. Enlarge it to 2 times')
+                        max_size = len(data_s[mini_data_idx]) * len(data_t[mini_data_idx]) * 2
+                        config['mini_mini_batch_length'] = max_size
 
                     # get a new mini-mini batch
                     while mini_data_idx < len(data_s) and stack_size + len(data_s[mini_data_idx]) * len(data_t[mini_data_idx]) < max_size:
@@ -450,8 +451,10 @@ if __name__ == '__main__':
                     mini_data_t = []
                     while mini_data_idx < len(data_s):
                         if len(data_s[mini_data_idx]) * len(data_t[mini_data_idx]) >= max_size:
-                            logger.error('mini_mini_batch_length is too small')
-                            exit()
+                            logger.error('mini_mini_batch_length is too small. Enlarge it to 2 times')
+                            max_size = len(data_s[mini_data_idx]) * len(data_t[mini_data_idx]) * 2
+                            config['mini_mini_batch_length'] = max_size
+
                         while mini_data_idx < len(data_s) and stack_size + len(data_s[mini_data_idx]) * len(data_t[mini_data_idx]) < max_size:
                             mini_data_s.append(data_s[mini_data_idx])
                             mini_data_t.append(data_t[mini_data_idx])
@@ -473,8 +476,8 @@ if __name__ == '__main__':
                         mini_data_t = []
                         stack_size = 0
 
-                    mean_ll = np.average([l[0] for l in loss_valid])
-                    mean_ppl = np.average([l[1] for l in loss_valid])
+                    mean_ll = np.average(np.concatenate([l[0] for l in loss_batch]))
+                    mean_ppl = np.average(np.concatenate([l[1] for l in loss_batch]))
                     logger.info('\tPrevious best score: \t ll=%f, \t ppl=%f' % (valid_param['valid_best_score'][0], valid_param['valid_best_score'][1]))
                     logger.info('\tCurrent score: \t ll=%f, \t ppl=%f' % (mean_ll, mean_ppl))
 
