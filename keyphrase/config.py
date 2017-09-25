@@ -27,8 +27,8 @@ def setup_keyphrase_all():
     Experiment process
     '''
     # do training?
-    config['do_train']        = True
-    # config['do_train']        = False
+    # config['do_train']        = True
+    config['do_train']        = False
 
     # do quick-testing (while training)?
     config['do_quick_testing']     = True
@@ -77,9 +77,9 @@ def setup_keyphrase_all():
     config['get_instance']    = True
 
     # size
-    config['batch_size']      = 100
-    config['mini_batch_size'] = 20
-    config['mini_mini_batch_length']      = 300000 # max length (#words) of each mini-mini batch, up to the GPU memory you have
+    config['batch_size']      = 50
+    # config['mini_batch_size'] = 20 # not useful any more
+    config['mini_mini_batch_length']      = 300000 # max length (#words) of each mini-mini batch, up to the GPU memory you have 300000
     config['mode']            = 'RNN'
     config['binary']          = False
     config['voc_size']        = 50000
@@ -89,7 +89,7 @@ def setup_keyphrase_all():
         os.mkdir(config['path_log'])
 
     # path to pre-trained model
-    config['trained_model']   = config['path_experiment'] + '/experiments.keyphrase-all.one2one.copy.id=20170106-025508.epoch=4.batch=1000.pkl'
+    config['trained_model']   = '' #config['path_experiment'] + '/experiments.keyphrase-all.one2one.copy.id=20170106-025508.epoch=4.batch=1000.pkl'
     # config['trained_model']   = config['path_experiment'] + '/experiments.keyphrase-all.one2one.copy.id=20170106-025508.epoch=4.batch=1000.pkl'
 
     config['weight_json']= config['path_experiment'] + '/model_weight.json'
@@ -116,6 +116,7 @@ def setup_keyphrase_all():
     config['sample_beam']     = 200 #config['voc_size']
     config['sample_stoch']    = False # use beamsearch
     config['sample_argmax']   = False
+    config['return_encoding'] = False
 
     config['predict_type']    = 'generative' # type of prediction, extractive or generative
     # config['predict_path']    = config['path_experiment'] + '/predict.' + config['predict_type']+ '.'+ config['timemark'] + '.dataset=%d.len=%d.beam=%d.predict=%s.target=%s.keeplongest=%s.noun_phrase=%s/' % (len(config['testing_datasets']),config['max_len'], config['sample_beam'], config['predict_filter'], config['target_filter'], config['keep_longest'], config['noun_phrase_only'])

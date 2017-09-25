@@ -1916,7 +1916,7 @@ class NRM(Model):
         return sample, np.exp(score), ppp
 
 
-    def generate_multiple(self, inputs, mode='display', return_attend=False, return_all=True, return_encoding=True):
+    def generate_multiple(self, inputs, mode='display', return_attend=False, return_all=True, return_encoding=False):
         # assert self.config['sample_stoch'], 'RNNLM sampling must be stochastic'
         # assert not self.config['sample_argmax'], 'RNNLM sampling cannot use argmax'
         args = dict(k=self.config['sample_beam'],
@@ -1968,6 +1968,7 @@ class NRM(Model):
                 return context, sample, score, output_encoding
             else:
                 return sample, score
+        return sample, score
 
     def evaluate_(self, inputs, outputs, idx2word, inputs_unk=None, encode=True):
         def cut_zero_yes(sample, idx2word, ppp=None, Lmax=None):

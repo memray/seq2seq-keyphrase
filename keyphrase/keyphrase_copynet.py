@@ -342,6 +342,10 @@ if __name__ == '__main__':
                 mini_data_s = []
                 mini_data_t = []
                 while mini_data_idx < len(data_s):
+                    if len(data_s[mini_data_idx]) * len(data_t[mini_data_idx]) >= max_size:
+                        logger.error('mini_mini_batch_length is too small')
+                        exit()
+
                     # get a new mini-mini batch
                     while mini_data_idx < len(data_s) and stack_size + len(data_s[mini_data_idx]) * len(data_t[mini_data_idx]) < max_size:
                         mini_data_s.append(data_s[mini_data_idx])
@@ -350,6 +354,8 @@ if __name__ == '__main__':
                         mini_data_idx += 1
                     mini_data_s = np.asarray(mini_data_s)
                     mini_data_t = np.asarray(mini_data_t)
+
+                    logger.info('Training minibatch %d/%d' % (mini_data_idx, len(data_s)))
 
                     # fit the mini-mini batch
                     if config['copynet']:
@@ -380,7 +386,7 @@ if __name__ == '__main__':
                     logger.info('generating [training set] samples')
                     print_case += 'generating [training set] samples\n'
 
-                    for _ in range(2):
+                    for _ in range(1):
                         idx              = int(np.floor(n_rng.rand() * train_size))
 
                         test_s_o, test_t_o = train_data_plain[idx]
@@ -390,7 +396,7 @@ if __name__ == '__main__':
                             test_s, test_t = split_into_multiple_and_padding([test_s_o], [test_t_o])
 
                         inputs_unk = np.asarray(unk_filter(np.asarray(test_s[0], dtype='int32')), dtype='int32')
-                        prediction, score = agent.generate_multiple(inputs_unk[None, :], return_all=True)
+                        prediction, score = agent.generate_multiple(inputs_unk[None, :])
 
                         outs, metrics = agent.evaluate_multiple([test_s[0]], [test_t],
                                                                 [test_s_o], [test_t_o],
@@ -399,14 +405,14 @@ if __name__ == '__main__':
                         print('*' * 50)
 
                     logger.info('generating [testing set] samples')
-                    for _ in range(2):
+                    for _ in range(1):
                         idx            = int(np.floor(n_rng.rand() * test_size))
                         test_s_o, test_t_o = test_data_plain[idx]
                         if not config['multi_output']:
                             test_s, test_t = split_into_multiple_and_padding([test_s_o], [test_t_o])
 
                         inputs_unk = np.asarray(unk_filter(np.asarray(test_s[0], dtype='int32')), dtype='int32')
-                        prediction, score = agent.generate_multiple(inputs_unk[None, :], return_all=True)
+                        prediction, score = agent.generate_multiple(inputs_unk[None, :], return_all=False)
 
                         outs, metrics = agent.evaluate_multiple([test_s[0]], [test_t],
                                                                 [test_s_o], [test_t_o],
@@ -443,6 +449,9 @@ if __name__ == '__main__':
                     mini_data_s = []
                     mini_data_t = []
                     while mini_data_idx < len(data_s):
+                        if len(data_s[mini_data_idx]) * len(data_t[mini_data_idx]) >= max_size:
+                            logger.error('mini_mini_batch_length is too small')
+                            exit()
                         while mini_data_idx < len(data_s) and stack_size + len(data_s[mini_data_idx]) * len(data_t[mini_data_idx]) < max_size:
                             mini_data_s.append(data_s[mini_data_idx])
                             mini_data_t.append(data_t[mini_data_idx])
@@ -519,7 +528,6 @@ if __name__ == '__main__':
             progbar_test = Progbar(test_size, logger)
             logger.info('Predicting on %s' % dataset_name)
 
-            return_encoding = True
             input_encodings = []
             output_encodings = []
 
@@ -534,11 +542,11 @@ if __name__ == '__main__':
             for idx in range(len(test_data_plain)): # len(test_data_plain)
                 source_str, target_str, test_s_o, test_t_o = test_data_plain[idx]
                 print('*'*20 + '  ' + str(idx)+ '  ' + '*'*20)
-                print(source_str)
-                print('[%d]%s' % (len(test_s_o), str(test_s_o)))
-                print(target_str)
-                print(test_t_o)
-                print('')
+                # print(source_str)
+                # print('[%d]%s' % (len(test_s_o), str(test_s_o)))
+                # print(target_str)
+                # print(test_t_o)
+                # print('')
 
                 if not config['multi_output']:
                     test_s, test_t = split_into_multiple_and_padding([test_s_o], [test_t_o])
@@ -555,12 +563,12 @@ if __name__ == '__main__':
                 # inputs_ = np.asarray(test_s, dtype='int32')
 
 
-                if return_encoding:
-                    input_encoding, prediction, score, output_encoding = agent.generate_multiple(inputs_unk[None, :], return_all=True, return_encoding=return_encoding)
+                if config['return_encoding']:
+                    input_encoding, prediction, score, output_encoding = agent.generate_multiple(inputs_unk[None, :], return_all=True, return_encoding=True)
                     input_encodings.append(input_encoding)
                     output_encodings.append(output_encoding)
                 else:
-                    prediction, score = agent.generate_multiple(inputs_unk[None, :], return_all=True, return_encoding=return_encoding)
+                    prediction, score = agent.generate_multiple(inputs_unk[None, :], return_encoding=False)
 
                 predictions.append(prediction)
                 scores.append(score)
