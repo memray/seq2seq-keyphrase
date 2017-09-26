@@ -476,8 +476,8 @@ if __name__ == '__main__':
                         mini_data_t = []
                         stack_size = 0
 
-                    mean_ll = np.average(np.concatenate([l[0] for l in loss_batch]))
-                    mean_ppl = np.average(np.concatenate([l[1] for l in loss_batch]))
+                    mean_ll = np.average(np.concatenate([l[0] for l in loss_valid]))
+                    mean_ppl = np.average(np.concatenate([l[1] for l in loss_valid]))
                     logger.info('\tPrevious best score: \t ll=%f, \t ppl=%f' % (valid_param['valid_best_score'][0], valid_param['valid_best_score'][1]))
                     logger.info('\tCurrent score: \t ll=%f, \t ppl=%f' % (mean_ll, mean_ppl))
 
