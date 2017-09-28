@@ -1855,9 +1855,9 @@ class NRM(Model):
 
 
         # responding loss
-        loss_rec = T.mean(-logPxz) # get the mean of cross-entropy of this batch
-        loss_ppl = T.exp(T.mean(-logPPL))
-        loss     = loss_rec
+        loss_rec = -logPxz # get the mean of cross-entropy of this batch
+        loss_ppl = T.exp(-logPPL)
+        loss     = T.mean(loss_rec)
 
         updates  = self.optimizer.get_updates(self.params, loss)
 
