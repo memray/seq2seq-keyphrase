@@ -47,12 +47,16 @@ If you want to extract keyphrases from your own data using our model, you need t
 ### Test
 Set *config['do_evaluate'] = True* and you'll see a lot of print-outs in the console and reports in directory `config['predict_path']`. Please be aware that this result is only for developing and debugging and it's slightly different from the reported result.
 
-### Evaluation (to repeate the results in paper)
+### Evaluation (to reproduce the results in paper)
 The performances reported in the paper is done by `keyphrase/baseline/evaluate.py`. It loads the phrases from `dataset/keyphrase/prediction/` and evalutes them by Precision, Recall, F-score, Bpref, MRR etc.
+
+You can find the awesome implementation from [Kazi Saidul Hasan](http://www.hlt.utdallas.edu/~saidul/code.html) (TfIdf, TextRank, SimpleRank, ExpandRank) and [Alyona Medelyan](http://www.medelyan.com/software) (Maui and KEA). I also have put my keyphrase outputs [here](http://memray.me/uploads/data/prediction.zip) for your convenience (unzip to `seq2seq-keyphrase-release/dataset/keyphrase/prediction`). 
 
 Data
 ==========
-The training data mentioned above is pickled. You can download here [here](http://crystal.exp.sis.pitt.edu:8080/iris/data/experiment_dataset.zip). Just in case you are China Mainland where downloading this large file is painful, I provide another [link](http://pan.baidu.com/s/1b46mwY) on Baidu Pan Cloud Drive.
+The training data mentioned above is pickled. You can download here [here](http://crystal.exp.sis.pitt.edu:8080/iris/data/experiment_dataset.zip). Just in case you are in China Mainland where downloading this large file is painful, I provide another [link](http://pan.baidu.com/s/1b46mwY) on Baidu Pan Cloud Drive. 
+
+**UPDATE**: If it still doesn't work, please **download from [here](http://memray.me/uploads/data/experiment_dataset.zip)!**
 
 If you are just interested in using the KP20k dataset, you can get the data from [here](http://crystal.exp.sis.pitt.edu:8080/iris/data/kp20k.zip). 
 
@@ -73,12 +77,15 @@ If you use the code or datasets, please cite the following paper:
 > Rui Meng, Sanqiang Zhao, Shuguang Han, Daqing He, Peter Brusilovsky and Yu Chi. Deep Keyphrase Generation. 55th Annual Meeting of Association for Computational Linguistics, 2017. [[PDF]](http://memray.me/uploads/acl17-keyphrase-generation.pdf) [[arXiv]](https://arxiv.org/abs/1704.06879)
 
 ```
-@InProceedings{meng-EtAl:2017:P17-1,
+@InProceedings{meng-EtAl:2017:Long,
   author    = {Meng, Rui  and  Zhao, Sanqiang  and  Han, Shuguang  and  He, Daqing  and  Brusilovsky, Peter  and  Chi, Yu},
   title     = {Deep Keyphrase Generation},
-  booktitle = {Proceedings of the 55th Annual Meeting of the Association for Computational Linguistics},
-  month     = {August},
+  booktitle = {Proceedings of the 55th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)},
+  month     = {July},
   year      = {2017},
   address   = {Vancouver, Canada},
-  publisher = {Association for Computational Linguistics}
+  publisher = {Association for Computational Linguistics},
+  pages     = {582--592},
+  url       = {http://aclweb.org/anthology/P17-1054}
 }
+```

@@ -14,7 +14,7 @@ from keyphrase.dataset import dataset_utils
 import keyphrase.config
 
 # config = keyphrase.config.setup_keyphrase_all()
-config = config.setup_keyphrase_baseline()  # load settings.
+config = keyphrase.config.setup_keyphrase_baseline()  # load settings.
 
 def load_phrase(file_path, tokenize=True):
     phrases = []
