@@ -20,7 +20,7 @@ All the primary settings are stored in `keyphrase/config.py`.
 Some scripts for data processing are placed in `keyphrase/dataset/`. 
 
 ### Before running...
-Before running the code, please download this [file](http://crystal.exp.sis.pitt.edu:8080/iris/data/experiment_dataset.zip), unzip it to the project directory and overwrite the `Experiment/` and `dataset/`. 
+Before running the code, please download this [experiment_dataset.zip](http://memray.me/uploads/experiment_dataset.zip), unzip it to the project directory and overwrite the `Experiment/` and `dataset/`. 
 
 `Experiment/` contains one pre-trained copy-seq2seq model *(experiments.keyphrase-all.one2one.copy.id=20170106-025508.epoch=4.batch=1000.pkl)* used in the paper, based on which you can extract keyphrases for your own corpus.
 Besides there are some output examples in this folder. 
@@ -50,15 +50,13 @@ Set *config['do_evaluate'] = True* and you'll see a lot of print-outs in the con
 ### Evaluation (to reproduce the results in paper)
 The performances reported in the paper is done by `keyphrase/baseline/evaluate.py`. It loads the phrases from `dataset/keyphrase/prediction/` and evalutes them by Precision, Recall, F-score, Bpref, MRR etc.
 
-You can find the awesome implementation from [Kazi Saidul Hasan](http://www.hlt.utdallas.edu/~saidul/code.html) (TfIdf, TextRank, SimpleRank, ExpandRank) and [Alyona Medelyan](http://www.medelyan.com/software) (Maui and KEA). I also have put my keyphrase outputs [here](http://memray.me/uploads/data/prediction.zip) for your convenience (unzip to `seq2seq-keyphrase-release/dataset/keyphrase/prediction`). 
+You can find the awesome implementation from [Kazi Saidul Hasan](http://www.hlt.utdallas.edu/~saidul/code.html) (TfIdf, TextRank, SimpleRank, ExpandRank) and [Alyona Medelyan](http://www.medelyan.com/software) (Maui and KEA). I also have put my keyphrase outputs [here](http://memray.me/uploads/prediction.zip) for your convenience (unzip to `seq2seq-keyphrase-release/dataset/keyphrase/prediction`). 
 
 Data
 ==========
-The training data mentioned above is pickled. You can download here [here](http://crystal.exp.sis.pitt.edu:8080/iris/data/experiment_dataset.zip). Just in case you are in China Mainland where downloading this large file is painful, I provide another [link](http://pan.baidu.com/s/1b46mwY) on Baidu Pan Cloud Drive. 
+The training data mentioned above is pickled. You can download here: [experiment_dataset.zip](http://memray.me/uploads/experiment_dataset.zip). Just in case you are in China Mainland where downloading this large file is painful, I provide another [link](http://pan.baidu.com/s/1b46mwY) on Baidu Pan Cloud Drive. 
 
-**UPDATE**: If it still doesn't work, please **download from [here](http://memray.me/uploads/data/experiment_dataset.zip)!**
-
-If you are just interested in using the KP20k dataset, you can get the data from [here](http://crystal.exp.sis.pitt.edu:8080/iris/data/kp20k.zip). 
+If you are just interested in using the KP20k dataset, you can get the data as well: [kp20k.zip](http://memray.me/uploads/kp20k.zip). 
 
 The KP20k dataset is released in JSON format. Each data point contains the title, abstract and keywords of a paper.
 
@@ -68,7 +66,7 @@ Training | 530,803
 Validation | 20,000
 Test | 20,000
 
-The raw dataset (without filtering noisy data) is also provided. Please download [here](http://crystal.exp.sis.pitt.edu:8080/iris/data/all_title_abstract_keyword_clean.json.zip). 
+The raw dataset (without filtering noisy data) is also provided. Please download [here](http://memray.me/uploads/all_title_abstract_keyword_clean.json.zip). 
 
 Cite
 ==========
