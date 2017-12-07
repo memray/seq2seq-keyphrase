@@ -360,6 +360,7 @@ if __name__ == '__main__':
 
                     # fit the mini-mini batch
                     if config['copynet']:
+                        # mini_data_s=(batch_size, src_len), mini_data_t=(batch_size, trg_len), data_c=(batch_size, trg_len, src_len)
                         data_c = cc_martix(mini_data_s, mini_data_t)
                         loss_batch += [agent.train_(unk_filter(mini_data_s), unk_filter(mini_data_t), data_c)]
                         # loss += [agent.train_guard(unk_filter(mini_data_s), unk_filter(mini_data_t), data_c)]
@@ -403,6 +404,7 @@ if __name__ == '__main__':
                                                                 [test_s_o], [test_t_o],
                                                                 [prediction], [score],
                                                                 idx2word)
+                        print('*' * 50)
                         print('*' * 50)
 
                     logger.info('generating [testing set] samples')
@@ -512,9 +514,10 @@ if __name__ == '__main__':
     if do_predict:
         for dataset_name in config['testing_datasets']:
             # override the original test_set
-            test_set = keyphrase_test_dataset.testing_data_loader(dataset_name, kwargs=dict(basedir=config['path'])).load_testing_data_postag(word2idx)
+            # if the dataset does not provide postag, use load_testing_data()
+            test_set = keyphrase_test_dataset.testing_data_loader(dataset_name, kwargs=dict(basedir=config['path'])).load_testing_data(word2idx)
+            # test_set = keyphrase_test_dataset.testing_data_loader(dataset_name, kwargs=dict(basedir=config['path'])).load_testing_data_postag(word2idx)
             # test_set = test_sets[dataset_name]
-
 
             test_data_plain = list(zip(*(test_set['source_str'], test_set['target_str'], test_set['source'], test_set['target'])))
             test_size = len(test_data_plain)
@@ -573,6 +576,11 @@ if __name__ == '__main__':
                 else:
                     prediction, score = agent.generate_multiple(inputs_unk[None, :], return_encoding=False)
 
+                # print(prediction)
+                for p in prediction:
+                    if any([f>=50000 for f in p]):
+                        print(p)
+
                 predictions.append(prediction)
                 scores.append(score)
                 progbar_test.update(idx, [])
@@ -583,7 +591,6 @@ if __name__ == '__main__':
     Evaluate on Testing Data
     '''
     if do_evaluate:
-
         for dataset_name in config['testing_datasets']:
             print_test = open(config['predict_path'] + '/experiments.{0}.id={1}.testing@{2}.{3}.len={4}.beam={5}.log'.format(config['task_name'],config['timemark'],dataset_name, config['predict_type'], config['max_len'], config['sample_beam']), 'w')
 

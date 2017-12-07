@@ -27,16 +27,16 @@ def setup_keyphrase_all():
     Experiment process
     '''
     # do training?
-    config['do_train']        = True
-    # config['do_train']        = False
+    # config['do_train']        = True
+    config['do_train']        = False
 
     # do quick-testing (while training)?
-    config['do_quick_testing']     = True
-    # config['do_quick_testing']     = False
+    # config['do_quick_testing']     = True
+    config['do_quick_testing']     = False
 
     # do validation?
-    config['do_validate']     = True
-    # config['do_validate']     = False
+    # config['do_validate']     = True
+    config['do_validate']     = False
 
     # do predicting?
     config['do_predict']      = True
@@ -57,7 +57,7 @@ def setup_keyphrase_all():
     # config['testing_name']    = 'inspec_all'
     # config['testing_dataset'] = config['path'] + '/dataset/keyphrase/inspec/inspec_all.json'
 
-    config['testing_datasets']= ['nus'] # 'inspec', 'nus', 'semeval', 'krapivin', 'kp20k'
+    config['testing_datasets']= ['kp20k_new'] # 'inspec', 'nus', 'semeval', 'krapivin', 'kp20k'
     config['preprocess_type'] = 1 # 0 is old type, 1 is new type(keep most punctuation)
 
     config['data_process_name'] = 'punctuation-20000validation-20000testing/'
@@ -89,7 +89,7 @@ def setup_keyphrase_all():
         os.mkdir(config['path_log'])
 
     # path to pre-trained model
-    config['trained_model']   = '' #config['path_experiment'] + '/experiments.keyphrase-all.one2one.copy.id=20170106-025508.epoch=4.batch=1000.pkl'
+    config['trained_model']   = config['path_experiment'] + '/experiments.keyphrase-all.one2one.copy.id=20170106-025508.epoch=4.batch=1000.pkl'
     # config['trained_model']   = config['path_experiment'] + '/experiments.keyphrase-all.one2one.copy.id=20170106-025508.epoch=4.batch=1000.pkl'
 
     config['weight_json']= config['path_experiment'] + '/model_weight.json'
@@ -228,7 +228,7 @@ def setup_keyphrase_baseline():
     config['testing_name']    = 'inspec_all'
     config['testing_dataset'] = config['path'] + '/dataset/keyphrase/inspec/inspec_all.json'
 
-    config['testing_datasets']= ['kp20k', 'inspec', 'nus', 'semeval', 'krapivin'] # 'inspec', 'nus', 'semeval', 'krapivin', 'ke20k', 'kdd', 'www', 'umd'
+    config['testing_datasets']= ['inspec', 'nus'] # 'inspec', 'nus', 'semeval', 'krapivin', 'ke20k', 'kdd', 'www', 'umd'
     config['preprocess_type'] = 1 # 0 is old type, 1 is new type(keep most punctuation)
 
     config['data_process_name'] = 'eos-punctuation-1000validation/'

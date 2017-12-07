@@ -818,21 +818,46 @@ class DecoderAtt(Decoder):
     Build the decoder for evaluation
     """
     def prepare_xy(self, target, cc_matrix):
+        '''
+        create target input for decoder (append a zero to the head of each sequence)
+        :param target: indexes of target words
+        :param cc_matrix: copy-matrix, (batch_size, trg_len, src_len), cc_matrix[i][j][k]=1 if j-th word in target matches the k-th word in source
+        :return:
+            X:          embedding of target sequences(batch_size, trg_len, embedding_dim)
+            X_mask:     if x is a real word or padding (batch_size, trg_len)
+            LL:         simply the copy-matrix (batch_size, trg_len, src_len)
+            XL_mask:    if word ll in LL has any copyable word in source (batch_size, trg_len)
+            Y_mask:     original mask of target sequences, but why do we need this? (batch_size, trg_len)
+            Count:      number of real words in target, original length of each target sequences. size=(batch_size, 1)
+        '''
         # target:      (nb_samples, index_seq)
         # cc_matrix:   (nb_samples, maxlen_t, maxlen_s)
         # context:     (nb_samples)
-        Y,  Y_mask  = self.Embed(target, True)  # (nb_samples, maxlen_t, embedding_dim)
+
+        # create the embedding of target words and their masks
+        Y,  Y_mask  = self.Embed(target, True)  # (batch_size, trg_len, embedding_dim), (batch_size, trg_len)
+
+        # append a zero array to the beginning of input
+        #   first word of each target sequence to be zero (just like <BOS>) as the initial input of decoder
+        #   create a zero array and concate to Y: (batch_size, 1, embedding_dim) + (batch_size, maxlen_t - 1, embedding_dim)
+        #   as it's sure that there's a least one <pad> in the end of Y, so feel free to drop the last word (Y[:, :-1, :])
         X           = T.concatenate([alloc_zeros_matrix(Y.shape[0], 1, Y.shape[2]), Y[:, :-1, :]], axis=1)
 
-        # LL          = T.concatenate([alloc_zeros_matrix(Y.shape[0], 1, cc_matrix.shape[2]),
-        #                              cc_matrix[:, :-1, :]], axis=1)
+        # LL          = T.concatenate([alloc_zeros_matrix(Y.shape[0], 1, cc_matrix.shape[2]), cc_matrix[:, :-1, :]], axis=1)
+
+        # LL is the copy matrix
         LL = cc_matrix
 
+        # a mask of copy mask, XL_mask[i][j]=1 shows the word in target has copyable/matching words in source text (batch_size, trg_len)
         XL_mask     = T.cast(T.gt(T.sum(LL, axis=2), 0), dtype='float32')
+
+        # 'use_input' means teacher forcing? if not, make decoder input to be zero
         if not self.config['use_input']:
             X *= 0
 
+        # create the mask of target input, append an [1] array to show <BOS>, size=(batch_size, trg_len)
         X_mask    = T.concatenate([T.ones((Y.shape[0], 1)), Y_mask[:, :-1]], axis=1)
+        # how many real words (non-zero/non-padding) in each target sequence, size=(batch_size, 1)
         Count     = T.cast(T.sum(X_mask, axis=1), dtype=theano.config.floatX)
         return X, X_mask, LL, XL_mask, Y_mask, Count
 
@@ -849,11 +874,25 @@ class DecoderAtt(Decoder):
                       train=True):
         """
         Build the Computational Graph ::> Context is essential
+        target:     (batch_size, trg_len)
+        cc_matrix:  (batch_size, trg_len, src_len), cc_matrix[i][j][k]=1 if j-th word in target matches the k-th word in source
+        context:    (batch_size, src_len, 2*enc_hidden_dim), encoding of each time step (concatenate both forward and backward RNN encodings)
+        context:    (nb_samples, max_len, contxt_dim)
+        c_mask:     (batch_size, src_len) mask, X_mask[i][j]=1 means j-th word of batch i in X is not 0 (index of <pad>)
         """
         assert c_mask is not None, 'context must be supplied for this decoder.'
         assert context.ndim == 3, 'context must have 3 dimentions.'
-        # context: (nb_samples, max_len, contxt_dim)
-        context_A = self.Is(context)  # (nb_samples, max_len, embed_dim)
+        # (nb_samples, max_len, embed_dim), passed through a dense layer (dec_contxt_dim * dec_embedd_dim), convert context to embed?
+        context_A = self.Is(context)
+
+        '''
+        X:          embedding of target sequences(batch_size, trg_len, embedding_dim)
+        X_mask:     if x is a real word or padding (batch_size, trg_len)
+        LL:         simply the copy-matrix (batch_size, trg_len, src_len)
+        XL_mask:    if word ll in LL has any copyable word in source (batch_size, trg_len)
+        Y_mask:     original mask of target sequences, but why do we need this? (batch_size, trg_len)
+        Count:      number of real words in target, original length of each target sequences. size=(batch_size, 1)
+        '''
         X, X_mask, LL, XL_mask, Y_mask, Count = self.prepare_xy(target, cc_matrix)
 
         # input drop-out if any.
@@ -861,29 +900,30 @@ class DecoderAtt(Decoder):
             X     = self.D(X, train=train)
 
         # Initial state of RNN
-        Init_h   = self.Initializer(context[:, 0, :])  # default order ->
-        Init_a   = T.zeros((context.shape[0], context.shape[1]), dtype='float32')
-        coverage = T.zeros((context.shape[0], context.shape[1]), dtype='float32')
+        Init_h   = self.Initializer(context[:, 0, :])  # initialize hidden vector by converting the last state
+        Init_a   = T.zeros((context.shape[0], context.shape[1]), dtype='float32') # (batch_size, src_len)
+        coverage = T.zeros((context.shape[0], context.shape[1]), dtype='float32') # (batch_size, src_len)
 
-        X        = X.dimshuffle((1, 0, 2))
-        X_mask   = X_mask.dimshuffle((1, 0))
-        LL       = LL.dimshuffle((1, 0, 2))            # (maxlen_t, nb_samples, maxlen_s)
-        XL_mask  = XL_mask.dimshuffle((1, 0))          # (maxlen_t, nb_samples)
+        # permute to make dim of trg_len first
+        X        = X.dimshuffle((1, 0, 2))             # (trg_len, batch_size, embedding_dim)
+        X_mask   = X_mask.dimshuffle((1, 0))           # (trg_len, batch_size)
+        LL       = LL.dimshuffle((1, 0, 2))            # (trg_len, batch_size, src_len)
+        XL_mask  = XL_mask.dimshuffle((1, 0))          # (trg_len, batch_size)
 
         def _recurrence(x, x_mask, ll, xl_mask, prev_h, prev_a, cov, cc, cm, ca):
             """
-            x:      (nb_samples, embed_dims)
-            x_mask: (nb_samples, )
-            ll:     (nb_samples, maxlen_s)
-            xl_mask:(nb_samples, )
+            x:      (nb_samples, embed_dims)        embedding of word in target sequence of current time step
+            x_mask: (nb_samples, )                  if x is a real word (1) or padding (0)
+            ll:     (nb_samples, maxlen_s)          if x can be copied from the i-th word in source sequence (1) or not (0)
+            xl_mask:(nb_samples, )                  if x has any copyable word in source sequence
             -----------------------------------------
-            prev_h: (nb_samples, hidden_dims)
+            prev_h: (nb_samples, hidden_dims)       hidden vector of previous step
             prev_a: (nb_samples, maxlen_s)
             cov:    (nb_samples, maxlen_s)  *** coverage ***
             -----------------------------------------
-            cc:     (nb_samples, maxlen_s, context_dim)
-            cm:     (nb_samples, maxlen_s)
-            ca:     (nb_samples, maxlen_s, ebd_dim)
+            cc:     (nb_samples, maxlen_s, context_dim)     context, encoding of source text
+            cm:     (nb_samples, maxlen_s)                  copy_mask,
+            ca:     (nb_samples, maxlen_s, ebd_dim)         context_A,
             """
             # compute the attention and get the context vector
             prob  = self.attention_reader(prev_h, cc, Smask=cm, Cov=cov)
@@ -891,31 +931,37 @@ class DecoderAtt(Decoder):
 
             cxt   = T.sum(cc * prob[:, :, None], axis=1)
 
-            # compute input word embedding (mixed)
+            # get new input bu concatenating current input word x and prev_a
             x_in  = T.concatenate([x, T.sum(ca * prev_a[:, :, None], axis=1)], axis=-1)
 
-            # compute the current hidden states of the RNN.
-            x_out = self.RNN(x_in, mask=x_mask, C=cxt, init_h=prev_h, one_step=True)
+            # compute the current hidden states of the RNN. hidden state of last time, shape=(nb_samples, output_emb_dim)
+            next_h = self.RNN(x_in, mask=x_mask, C=cxt, init_h=prev_h, one_step=True)
 
             # compute the current readout vector.
-            r_in  = [x_out]
+            r_in  = [next_h]
             if self.config['context_predict']:
                 r_in  += [cxt]
             if self.config['bigram_predict']:
                 r_in  += [x_in]
 
-            # copynet decoding
-            r_in    = T.concatenate(r_in, axis=-1)
-            r_out = self.hidden_readout(x_out)  # (nb_samples, voc_size)
+            # readout the word logits
+            r_in    = T.concatenate(r_in, axis=-1) # shape=(nb_samples, output_emb_dim)
+            r_out = self.hidden_readout(next_h)  # get logits, (nb_samples, voc_size)
             if self.config['context_predict']:
                 r_out += self.context_readout(cxt)
             if self.config['bigram_predict']:
                 r_out += self.prev_word_readout(x_in)
 
+            # Get the generate-mode probability: logits -> probs
             for l in self.output_nonlinear:
                 r_out = l(r_out)
 
+            # copynet decoding
+            # Os layer, concate emb of last word and hidden vector: [dec_readout_dim (300) + dec_embedd_dim (150), dec_contxt_dim]
             key     = self.Os(r_in)  # (nb_samples, cxt_dim) :: key
+
+            # zeta(yt-1) in Eq.9, copy attention?
+            #    (nb_samples, 1, cxt_dim) * (nb_samples, maxlen_s, cxt_dim)
             Eng     = T.sum(key[:, None, :] * cc, axis=-1)
 
             # # gating
@@ -927,14 +973,21 @@ class DecoderAtt(Decoder):
                 # r_out *= gt.flatten()[:, None]
                 # Eng   *= 1 - gt.flatten()[:, None]
 
+            #
             EngSum  = logSumExp(Eng, axis=-1, mask=cm, c=r_out)
 
+            # T.exp(r_out - EngSum) is generate_prob, T.exp(Eng - EngSum) * cm is copy_prob?
             next_p  = T.concatenate([T.exp(r_out - EngSum), T.exp(Eng - EngSum) * cm], axis=-1)
+            '''
+            self.config['dec_voc_size'] = 50000
+                next_b: the first 50000 probs in next_p is p_generate
+                next_c: probs after 50000 in next_p is p_copy
+            '''
             next_c  = next_p[:, self.config['dec_voc_size']:] * ll           # (nb_samples, maxlen_s)
             next_b  = next_p[:, :self.config['dec_voc_size']]
             sum_a   = T.sum(next_c, axis=1, keepdims=True)                   # (nb_samples,)
             next_a  = (next_c / (sum_a + err)) * xl_mask[:, None]            # numerically consideration
-            return x_out, next_a, ncov, sum_a, next_b
+            return next_h, next_a, ncov, sum_a, next_b
 
         outputs, _ = theano.scan(
             _recurrence,
@@ -942,6 +995,8 @@ class DecoderAtt(Decoder):
             outputs_info=[Init_h, Init_a, coverage, None, None],
             non_sequences=[context, c_mask, context_A]
         )
+
+        # (trg_len, batch_size, x) -> (batch_size, trg_len, x)
         X_out, source_prob, coverages, source_sum, prob_dist = [z.dimshuffle((1, 0, 2)) for z in outputs]
         X        = X.dimshuffle((1, 0, 2))
         X_mask   = X_mask.dimshuffle((1, 0))
@@ -1148,7 +1203,7 @@ class DecoderAtt(Decoder):
         attention_probs    = [] # don't know what's this
         attend = []
         score  = [] # probability of predited sequences
-        state = [] # the output encoding of predited sequences
+        state =  [] # the output encoding of predited sequences
 
         if stochastic:
             score = 0
@@ -1387,7 +1442,7 @@ class DecoderAtt(Decoder):
                 copy_word_prob  = np.array(hyp_copy_word_prob)
                 pass
 
-            logger.info('\t Depth=%d, get %d outputs' % (ii, len(sample)))
+            logger.info('\t Depth=%d, #(hypotheses)=%d, #(completed)=%d' % (ii, len(hyp_samples), len(sample)))
 
         # end.
         if not stochastic:
@@ -1834,6 +1889,8 @@ class NRM(Model):
         logger.info("compiling the compuational graph ::training function::")
 
         # input contains inputs, target and cc_matrix
+        # inputs=(batch_size, src_len), target=(batch_size, trg_len)
+        # cc_matrix=(batch_size, trg_len, src_len), cc_matrix[i][j][k]=1 if j-th word in target matches the k-th word in source
         train_inputs = [inputs, target, cc_matrix]
 
         self.train_ = theano.function(train_inputs,

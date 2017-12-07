@@ -212,6 +212,38 @@ class DataLoader(object):
 
         return instance
 
+    def load_testing_data(self, word2idx):
+        print('Loading testing dataset %s from %s' % (self.name, self.datadir))
+        text_file_paths = [self.textdir + n_ for n_ in os.listdir(self.textdir)]
+        keyphrase_file_paths = [self.keyphrasedir + n_ for n_ in os.listdir(self.keyphrasedir)]
+
+        def _load_text(path):
+            with open(path, 'r') as f:
+                text = ' '.join(f.readlines()).split(' ')
+            return text
+
+        def _load_keyphrase(path):
+            with open(path, 'r') as f:
+                keyphrase_str = [l.strip().split(' ') for l in f.readlines()]
+                return keyphrase_str
+
+        texts = [_load_text(f_) for f_ in text_file_paths]
+        keyphrases = [_load_keyphrase(f_) for f_ in keyphrase_file_paths]
+
+        instance = dict(source_str=[], target_str=[], source=[], source_postag=[], target=[], target_c=[])
+
+        for source, target in zip(texts, keyphrases):
+            A = [word2idx[w] if w in word2idx else word2idx['<unk>'] for w in source]
+            B = [[word2idx[w] if w in word2idx else word2idx['<unk>'] for w in p] for p in target]
+
+            instance['source_str'] += [source]
+            instance['target_str'] += [target]
+            instance['source'] += [A]
+            # instance['source_postag'] += [postag]
+            instance['target'] += [B]
+
+        return instance
+
 class INSPEC(DataLoader):
     def __init__(self, **kwargs):
         super(INSPEC, self).__init__(**kwargs)
@@ -631,6 +663,45 @@ class KP20k(DataLoader):
         else:
             return self.doclist
 
+class KP20k_NEW(DataLoader):
+    '''
+    18,716 docs after filtering (no keyword etc)
+    '''
+    def __init__(self, **kwargs):
+        super(KP20k_NEW, self).__init__(**kwargs)
+        self.datadir = self.basedir + '/dataset/keyphrase/testing-data/new_kp20k_for_theano_model/'
+        self.textdir = self.datadir + '/text/'
+        self.keyphrasedir = self.datadir + '/keyphrase/'
+
+    def get_docs(self, return_dict=True):
+        '''
+        :return: a list of dict instead of the Document object
+        '''
+        for fname in os.listdir(self.textdir):
+            d = Document()
+            d.name = fname
+            with open(self.textdir + fname, 'r') as textfile:
+                lines = textfile.readlines()
+                d.title = lines[0].strip()
+                d.text = ' '.join(lines[1:])
+            with open(self.keyphrasedir + fname, 'r') as phrasefile:
+                d.phrases = [l.strip() for l in phrasefile.readlines()]
+            self.doclist.append(d)
+
+        doclist = []
+        for d in self.doclist:
+            newd = {}
+            newd['name'] = d.name
+            newd['abstract'] = re.sub('[\r\n]', ' ', d.text).strip()
+            newd['title'] = re.sub('[\r\n]', ' ', d.title).strip()
+            newd['keyword'] = ';'.join(d.phrases)
+            doclist.append(newd)
+
+        if return_dict:
+            return doclist
+        else:
+            return self.doclist
+
 class IRBooks(DataLoader):
     def __init__(self, **kwargs):
         super(IRBooks, self).__init__(**kwargs)
@@ -722,6 +793,7 @@ kdd = KDD
 www = WWW
 umd = UMD
 kp20k = KP20k
+kp20k_new = KP20k_NEW
 duc = DUC
 irbooks = IRBooks
 quora = Quora # for Runhua's data
