@@ -52,13 +52,17 @@ def evaluate_multiple(config, test_set, inputs, outputs,
 
     loader      = test_dataset.testing_data_loader(dataset_name, kwargs=dict(basedir=config['path']))
     docs        = loader.get_docs(return_dict=False)
-    doc_names   = [d.name for d in docs]
+    doc_names   = [d.name for d in docs if d.name.endswith('.txt')]
 
 
     # reload the targets from corpus directly
     # target_dir = config['baseline_data_path'] + dataset_name + '/keyphrase/'
 
-    # test_set['source_postag'] = test_set['target_str']
+    if 'source_postag' not in test_set or len(test_set['source_postag']) != len(doc_names):
+        print('postag not found')
+        test_set['source_postag'] = test_set['target_str']
+
+    assert len(doc_names) == len(test_set['source_str']) == len(inputs) == len(test_set['target_str']) == len(samples) == len(scores) == len(test_set['source_postag'])
 
     # for input_sentence, target_list, predict_list, score_list in zip(inputs, original_outputs, samples, scores):
     for doc_name, source_str, input_sentence, target_list, predict_list, score_list, postag_list in zip(doc_names, test_set['source_str'], inputs, test_set['target_str'], samples, scores, test_set['source_postag']):
@@ -169,8 +173,10 @@ def evaluate_multiple(config, test_set, inputs, outputs,
                 if w == '<digit>':
                     number_digit += 1
 
+            """
             if len(predict) >= 1 and (predict[0] in stopword_set or predict[-1] in stopword_set):
                 keep = False
+            """
 
             # filter out single-word predictions
             if len(predict) <= 1:
@@ -206,19 +212,23 @@ def evaluate_multiple(config, test_set, inputs, outputs,
                     elif config['predict_filter'] == 'non-appear-only':
                         keep = keep and True
 
+            """
             # if all are <digit>, discard
             if number_digit == len(predict):
                 keep = False
 
+            """
             # remove duplicates
             key = '-'.join(predict)
+
+            """
             if key in predict_set:
                 keep = False
-
             # if #(word) == #(letter), it predicts like this: h a s k e l
             if sum([len(w) for w in predict])==len(predict) and len(predict) > 2:
                 keep = False
                 # print('\t\tall letters! - %s' % str(predict))
+            """
 
             # check if prediction is noun-phrase
             if config['noun_phrase_only']:

@@ -214,8 +214,8 @@ class DataLoader(object):
 
     def load_testing_data(self, word2idx):
         print('Loading testing dataset %s from %s' % (self.name, self.datadir))
-        text_file_paths = [self.textdir + n_ for n_ in os.listdir(self.textdir)]
-        keyphrase_file_paths = [self.keyphrasedir + n_ for n_ in os.listdir(self.keyphrasedir)]
+        text_file_paths = [self.textdir + n_ for n_ in os.listdir(self.textdir) if n_.endswith('.txt')]
+        keyphrase_file_paths = [self.keyphrasedir + n_ for n_ in os.listdir(self.keyphrasedir) if n_.endswith('.txt')]
 
         def _load_text(path):
             with open(path, 'r') as f:
@@ -239,7 +239,7 @@ class DataLoader(object):
             instance['source_str'] += [source]
             instance['target_str'] += [target]
             instance['source'] += [A]
-            # instance['source_postag'] += [postag]
+            instance['source_postag'] += [] # set to be empty
             instance['target'] += [B]
 
         return instance
@@ -663,13 +663,13 @@ class KP20k(DataLoader):
         else:
             return self.doclist
 
-class KP20k_NEW(DataLoader):
+class KP2k_NEW(DataLoader):
     '''
     18,716 docs after filtering (no keyword etc)
     '''
     def __init__(self, **kwargs):
-        super(KP20k_NEW, self).__init__(**kwargs)
-        self.datadir = self.basedir + '/dataset/keyphrase/testing-data/new_kp20k_for_theano_model/'
+        super(KP2k_NEW, self).__init__(**kwargs)
+        self.datadir = self.basedir + '/dataset/keyphrase/testing-data/new_kp2k_for_theano_model/'
         self.textdir = self.datadir + '/text/'
         self.keyphrasedir = self.datadir + '/keyphrase/'
 
@@ -793,7 +793,7 @@ kdd = KDD
 www = WWW
 umd = UMD
 kp20k = KP20k
-kp20k_new = KP20k_NEW
+kp2k_new = KP2k_NEW
 duc = DUC
 irbooks = IRBooks
 quora = Quora # for Runhua's data

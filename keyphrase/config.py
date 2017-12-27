@@ -1,6 +1,5 @@
 import time
 
-__author__ = 'jiataogu'
 import os
 import os.path as path
 
@@ -31,12 +30,12 @@ def setup_keyphrase_all():
     config['do_train']        = False
 
     # do quick-testing (while training)?
-    # config['do_quick_testing']     = True
-    config['do_quick_testing']     = False
+    config['do_quick_testing']     = True
+    # config['do_quick_testing']     = False
 
     # do validation?
-    # config['do_validate']     = True
-    config['do_validate']     = False
+    config['do_validate']     = True
+    # config['do_validate']     = False
 
     # do predicting?
     config['do_predict']      = True
@@ -57,7 +56,7 @@ def setup_keyphrase_all():
     # config['testing_name']    = 'inspec_all'
     # config['testing_dataset'] = config['path'] + '/dataset/keyphrase/inspec/inspec_all.json'
 
-    config['testing_datasets']= ['kp20k_new'] # 'inspec', 'nus', 'semeval', 'krapivin', 'kp20k'
+    config['testing_datasets']= ['nus'] # 'inspec', 'nus', 'semeval', 'krapivin', 'kp20k'
     config['preprocess_type'] = 1 # 0 is old type, 1 is new type(keep most punctuation)
 
     config['data_process_name'] = 'punctuation-20000validation-20000testing/'
@@ -77,8 +76,8 @@ def setup_keyphrase_all():
     config['get_instance']    = True
 
     # size
-    config['batch_size']      = 50
-    # config['mini_batch_size'] = 20 # not useful any more
+    config['batch_size']      = 100
+    config['mini_batch_size'] = 20
     config['mini_mini_batch_length']      = 300000 # max length (#words) of each mini-mini batch, up to the GPU memory you have
     config['mode']            = 'RNN'
     config['binary']          = False
@@ -116,7 +115,6 @@ def setup_keyphrase_all():
     config['sample_beam']     = 200 #config['voc_size']
     config['sample_stoch']    = False # use beamsearch
     config['sample_argmax']   = False
-    config['return_encoding'] = False
 
     config['predict_type']    = 'generative' # type of prediction, extractive or generative
     # config['predict_path']    = config['path_experiment'] + '/predict.' + config['predict_type']+ '.'+ config['timemark'] + '.dataset=%d.len=%d.beam=%d.predict=%s.target=%s.keeplongest=%s.noun_phrase=%s/' % (len(config['testing_datasets']),config['max_len'], config['sample_beam'], config['predict_filter'], config['target_filter'], config['keep_longest'], config['noun_phrase_only'])

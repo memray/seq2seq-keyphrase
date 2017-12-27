@@ -10,7 +10,9 @@ import theano
 import keyphrase_utils
 from keyphrase.dataset import keyphrase_test_dataset
 import os
-
+import resource
+# resource.setrlimit(resource.RLIMIT_STACK, (2**10,-1))
+# sys.setrecursionlimit(10**7)
 
 __author__ = "Rui Meng"
 __email__ = "rui.meng@pitt.edu"
@@ -544,8 +546,13 @@ if __name__ == '__main__':
             test_s_o_list = []
             test_t_o_list = []
 
+            start_idx = -1
+
+            # start_idx = 10800
+            # test_set, test_s_list, test_t_list, test_s_o_list, test_t_o_list, input_encodings, predictions, scores, output_encodings, idx2word = deserialize_from_file(config['predict_path'] + 'predict.{0}.{1}.id={2}.pkl'.format(config['predict_type'], dataset_name, start_idx))
+
             # Predict on testing data
-            for idx in range(len(test_data_plain)): # len(test_data_plain)
+            for idx in range(start_idx + 1, len(test_data_plain)): # len(test_data_plain)
                 source_str, target_str, test_s_o, test_t_o = test_data_plain[idx]
                 print('*'*20 + '  ' + str(idx)+ '  ' + '*'*20)
                 # print(source_str)
@@ -584,6 +591,15 @@ if __name__ == '__main__':
                 predictions.append(prediction)
                 scores.append(score)
                 progbar_test.update(idx, [])
+
+                # temporary save
+                if idx % 100 == 0:
+                    print('Saving dump to: '+ config['predict_path'] + 'predict.{0}.{1}.id={2}.pkl'.format(config['predict_type'], dataset_name, idx))
+                    serialize_to_file(
+                        [test_set, test_s_list, test_t_list, test_s_o_list, test_t_o_list, input_encodings, predictions,
+                         scores, output_encodings, idx2word],
+                        config['predict_path'] + 'predict.{0}.{1}.id={2}.pkl'.format(config['predict_type'], dataset_name, idx))
+
             # store predictions in file
             serialize_to_file([test_set, test_s_list, test_t_list, test_s_o_list, test_t_o_list, input_encodings, predictions, scores, output_encodings, idx2word], config['predict_path'] + 'predict.{0}.{1}.pkl'.format(config['predict_type'], dataset_name))
 
@@ -601,10 +617,10 @@ if __name__ == '__main__':
                 new_test_set = {}
                 for k,v in test_set.items():
                     new_test_set[k]  = v[:400]
-                test_s_list     = test_s_list[:400]
-                test_t_list     = test_t_list[:400]
-                test_s_o_list   = test_s_o_list[:400]
-                test_t_o_list   = test_t_o_list[:400]
+                test_s_list     = test_s_list[:400] # numericalized source with padding
+                test_t_list     = test_t_list[:400] # numericalized targets with padding
+                test_s_o_list   = test_s_o_list[:400] # numericalized source without padding
+                test_t_o_list   = test_t_o_list[:400] # numericalized targets without padding
                 predictions     = predictions[:400]
                 scores          = scores[:400]
 
