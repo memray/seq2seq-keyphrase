@@ -54,9 +54,9 @@ You can find the awesome implementation from [Kazi Saidul Hasan](http://www.hlt.
 
 Data
 ==========
-The training data mentioned above is pickled. You can download here: [experiment_dataset.zip](http://memray.me/uploads/experiment_dataset.zip). Just in case you are in China Mainland where downloading this large file is painful, I provide another [link](http://pan.baidu.com/s/1b46mwY) on Baidu Pan Cloud Drive. 
+The training data mentioned above is pickled. You can download here: [experiment_dataset.zip](https://drive.google.com/file/d/0B-7HD48qQzxVQkl5UHBZZVJQM00/view?usp=sharing). Just in case you are in China Mainland where downloading this large file is painful, I provide another [link](http://pan.baidu.com/s/1b46mwY) on Baidu Pan Cloud Drive. 
 
-If you are just interested in using the KP20k dataset, you can get the data as well: [kp20k.zip](http://memray.me/uploads/kp20k.zip). 
+If you are just interested in using the KP20k dataset, you can get the data as well: [kp20k.zip](https://drive.google.com/open?id=0B-7HD48qQzxVd2plbUlGdFduRDQ). 
 
 The KP20k dataset is released in JSON format. Each data point contains the title, abstract and keywords of a paper.
 
@@ -66,7 +66,7 @@ Training | 530,803
 Validation | 20,000
 Test | 20,000
 
-The raw dataset (without filtering noisy data) is also provided. Please download [here](http://memray.me/uploads/all_title_abstract_keyword_clean.json.zip). 
+The raw dataset (without filtering noisy data) is also provided. Please download [here](https://drive.google.com/open?id=0B-7HD48qQzxVQ3hIMW5NY1RWQ0E). 
 
 Cite
 ==========
