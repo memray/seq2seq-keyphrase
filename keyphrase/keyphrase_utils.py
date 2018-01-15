@@ -52,7 +52,7 @@ def evaluate_multiple(config, test_set, inputs, outputs,
 
     loader      = test_dataset.testing_data_loader(dataset_name, kwargs=dict(basedir=config['path']))
     docs        = loader.get_docs(return_dict=False)
-    doc_names   = [d.name for d in docs if d.name.endswith('.txt')]
+    doc_names   = [d.name for d in docs if not d.name.endswith('.DS_Store')] # annoying macos
 
 
     # reload the targets from corpus directly
@@ -170,8 +170,10 @@ def evaluate_multiple(config, test_set, inputs, outputs,
                 if re.match(r'[_,\(\)\.\'%]', w):
                     keep = False
                     # print('\t\tPunctuations! - %s' % str(predict))
+                """
                 if w == '<digit>':
                     number_digit += 1
+                """
 
             """
             if len(predict) >= 1 and (predict[0] in stopword_set or predict[-1] in stopword_set):
@@ -216,25 +218,25 @@ def evaluate_multiple(config, test_set, inputs, outputs,
             # if all are <digit>, discard
             if number_digit == len(predict):
                 keep = False
-
             """
-            # remove duplicates
+
+            # remove duplicates (some predictions are duplicate after stemming)
             key = '-'.join(predict)
 
-            """
             if key in predict_set:
                 keep = False
+
+            """
             # if #(word) == #(letter), it predicts like this: h a s k e l
             if sum([len(w) for w in predict])==len(predict) and len(predict) > 2:
                 keep = False
                 # print('\t\tall letters! - %s' % str(predict))
-            """
-
             # check if prediction is noun-phrase
             if config['noun_phrase_only']:
                 if ' '.join(predict) not in noun_phrase_set:
                     print('Not a NP: %s' % (' '.join(predict)))
                     keep = False
+            """
 
             # discard invalid ones
             if not keep:

@@ -34,12 +34,12 @@ def setup_keyphrase_all():
     # config['do_quick_testing']     = False
 
     # do validation?
-    config['do_validate']     = True
-    # config['do_validate']     = False
+    # config['do_validate']     = True
+    config['do_validate']     = False
 
     # do predicting?
-    config['do_predict']      = True
-    # config['do_predict']      = False
+    # config['do_predict']      = True
+    config['do_predict']      = False
 
     # do testing?
     config['do_evaluate']     = True
@@ -56,7 +56,7 @@ def setup_keyphrase_all():
     # config['testing_name']    = 'inspec_all'
     # config['testing_dataset'] = config['path'] + '/dataset/keyphrase/inspec/inspec_all.json'
 
-    config['testing_datasets']= ['nus'] # 'inspec', 'nus', 'semeval', 'krapivin', 'kp20k'
+    config['testing_datasets']= ['inspec'] # 'inspec', 'nus', 'semeval', 'krapivin', 'kp20k'
     config['preprocess_type'] = 1 # 0 is old type, 1 is new type(keep most punctuation)
 
     config['data_process_name'] = 'punctuation-20000validation-20000testing/'
