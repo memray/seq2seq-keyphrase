@@ -111,12 +111,17 @@ def evaluate_multiple(config, test_set, inputs, outputs,
                         keep = keep and True
                     elif config['target_filter'] == 'non-appear-only':
                         keep = keep and False
+                    else:
+                        keep = keep and True
+
                 elif match == False:
                     # if not match and 'appear-only', discard this phrase
                     if config['target_filter'] == 'appear-only':
                         keep = keep and False
                     # if not match and 'non-appear-only', keep this phrase
                     elif config['target_filter'] == 'non-appear-only':
+                        keep = keep and True
+                    else:
                         keep = keep and True
 
             if not keep:
@@ -316,12 +321,12 @@ def evaluate_multiple(config, test_set, inputs, outputs,
 
         metric_dict = {}
 
+        metric_dict['appear_target_number'] = len(target_outputs)
+        metric_dict['target_number'] = len(target_list)
         '''
         Compute micro metrics
         '''
         for number_to_predict in [5, 10, 15, 20, 30, 40, 50]: #5, 10, 15, 20, 30, 40, 50
-            metric_dict['appear_target_number'] = len(target_outputs)
-            metric_dict['target_number'] = len(target_list)
             metric_dict['correct_number@%d' % number_to_predict] = sum(correctly_matched[:number_to_predict])
 
             metric_dict['p@%d' % number_to_predict] = float(sum(correctly_matched[:number_to_predict])) / float(
@@ -426,9 +431,17 @@ def evaluate_multiple(config, test_set, inputs, outputs,
         outs.append(a)
         outs.append('*' * 100 + '\n')
 
-    # omit the bad data which contains 0 predictions
-    # real_test_size = sum([1 if m['target_number'] > 0 else 0 for m in micro_metrics])
+    # we could omit the bad data which contains 0 predictions. But for consistency we use all for evaluation
+    """
+    if config['target_filter'] == 'appear-only':
+        real_test_size = sum([1 if m['appear_target_number'] > 0 else 0 for m in micro_metrics])
+    elif config['target_filter'] == 'non-appear-only':
+        real_test_size = sum([1 if m['appear_target_number'] > 0 else 0 for m in micro_metrics])
+    else:
+        real_test_size = len(inputs)
+    """
     real_test_size = len(inputs)
+    logger.info("real_test_size = %d" % real_test_size)
 
     '''
     Compute the corpus evaluation
