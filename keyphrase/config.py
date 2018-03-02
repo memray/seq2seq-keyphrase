@@ -56,7 +56,7 @@ def setup_keyphrase_all():
     # config['testing_name']    = 'inspec_all'
     # config['testing_dataset'] = config['path'] + '/dataset/keyphrase/inspec/inspec_all.json'
 
-    config['testing_datasets']= ['inspec'] # 'inspec', 'nus', 'semeval', 'krapivin', 'kp20k'
+    config['testing_datasets']= ['kp20k'] # 'inspec', 'nus', 'semeval', 'krapivin', 'kp20k'
     config['preprocess_type'] = 1 # 0 is old type, 1 is new type(keep most punctuation)
 
     config['data_process_name'] = 'punctuation-20000validation-20000testing/'
@@ -226,7 +226,7 @@ def setup_keyphrase_baseline():
     config['testing_name']    = 'inspec_all'
     config['testing_dataset'] = config['path'] + '/dataset/keyphrase/inspec/inspec_all.json'
 
-    config['testing_datasets']= ['inspec', 'nus'] # 'inspec', 'nus', 'semeval', 'krapivin', 'ke20k', 'kdd', 'www', 'umd'
+    config['testing_datasets']= ['kp20k'] # 'inspec', 'nus', 'semeval', 'krapivin', 'ke20k', 'kdd', 'www', 'umd'
     config['preprocess_type'] = 1 # 0 is old type, 1 is new type(keep most punctuation)
 
     config['data_process_name'] = 'eos-punctuation-1000validation/'
@@ -290,7 +290,7 @@ def setup_keyphrase_baseline():
     config['normalize_score']   = True #
     # config['normalize_score']   = True
     config['predict_filter']    = 'appear-only' # [USELESS]whether do filtering on predictions? 'appear-only','non-appear-only' and None
-    config['target_filter']     = None # 'appear-only' # whether do filtering on groundtruth? 'appear-only','non-appear-only' and None
+    config['target_filter']     = 'appear-only' # 'appear-only' # whether do filtering on groundtruth? 'appear-only','non-appear-only' and None
     config['keep_longest']      = False # whether keep the longest phrases only, as there're too many phrases are part of other longer phrases
     config['noun_phrase_only']  = False
 

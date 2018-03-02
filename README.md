@@ -15,7 +15,7 @@ Run
 ### Entry and Settings
 The main entry of the project is placed in `keyphrase/keyphrase_copynet.py`
 
-All the primary settings are stored in `keyphrase/config.py`. 
+All the primary settings are stored in `keyphrase/config.py`. Training and Prediction load settings from [`setup_keyphrase_all()`](https://github.com/memray/seq2seq-keyphrase/blob/master/keyphrase/config.py#L7) and Evaluation loads the setting from [`setup_keyphrase_baseline()`](https://github.com/memray/seq2seq-keyphrase/blob/070ff8fc4abb51b96e4935934e70b8d92c6666f6/keyphrase/config.py#L191).
 
 Some scripts for data processing are placed in `keyphrase/dataset/`. 
 
@@ -37,7 +37,7 @@ If the *config['trained_model']* is not empty, it will load the trained model fi
 
  Also, there are some parameters you can try out, like *config['copynet'] = False* means to train a normal GRU-based Seq2seq model.
 
-### Extracting keyphrases
+### Predicting keyphrases
 Set *config['do_predict'] = True* and *config['testing_datasets']=['data_set1', 'data_set2' ...]* (datasets you wanna extract). The program will load the text from `dataset/baseline-data/` first, and save the prediction results into `config['predict_path']/predict.generative.dataset_name.pkl` and the extracted phrases into `dataset/keyphrase/prediction/`.
 
 Similarly, there are many parameters to tune the prediction of keyphrase.
@@ -47,10 +47,12 @@ If you want to extract keyphrases from your own data using our model, you need t
 ### Test
 Set *config['do_evaluate'] = True* and you'll see a lot of print-outs in the console and reports in directory `config['predict_path']`. Please be aware that this result is only for developing and debugging and it's slightly different from the reported result.
 
-### Evaluation (to reproduce the results in paper)
-The performances reported in the paper is done by `keyphrase/baseline/evaluate.py`. It loads the phrases from `dataset/keyphrase/prediction/` and evalutes them by Precision, Recall, F-score, Bpref, MRR etc.
+### Evaluation (to reproduce the results in the paper)
+The performances reported in the paper is done by `keyphrase/baseline/evaluate.py`. It loads the phrases from `dataset/keyphrase/prediction/` and evalutes them with metrics such as Precision, Recall, F-score, Bpref, MRR etc.
 
-You can find the awesome implementation from [Kazi Saidul Hasan](http://www.hlt.utdallas.edu/~saidul/code.html) (TfIdf, TextRank, SimpleRank, ExpandRank) and [Alyona Medelyan](http://www.medelyan.com/software) (Maui and KEA). I also have put my keyphrase outputs [here](https://drive.google.com/open?id=1DsAno3lvMlr-5rCk4qohcy4U3m__Sfj8) for your convenience (unzip to `seq2seq-keyphrase-release/dataset/keyphrase/prediction`). 
+Note that the setting of evaluation is different from the settings used in training/predicting and don't be confused. It is loaded by calling `setup_keyphrase_baseline()` in `config.py`. Also if you want to reproduce the result of present keyphrase prediction (Section 5.1 of the paper), please set `config['predict_filter']` and `config['target_filter']` to 'appear-only' (line 292,293). Similarly, set them to 'non-appear-only' for reproducing absent keyphrase prediction (Section 5.2 of the paper). 
+
+You can find the awesome baseline implementations from [Kazi Saidul Hasan](http://www.hlt.utdallas.edu/~saidul/code.html) (TfIdf, TextRank, SimpleRank, ExpandRank) and [Alyona Medelyan](http://www.medelyan.com/software) (Maui and KEA). I also have put my keyphrase outputs [here](https://drive.google.com/open?id=1DsAno3lvMlr-5rCk4qohcy4U3m__Sfj8) for your convenience (unzip to `seq2seq-keyphrase-release/dataset/keyphrase/prediction`). 
 
 Data
 ==========
