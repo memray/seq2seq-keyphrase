@@ -13,7 +13,9 @@ About How to Reproduce
 ======================
 My model was trained on Ubuntu 14.04, Python 2.7, Theano 0.8, CUDA 8.0 and cuDNN v5.
 
-I found that the development of Theano has been terminated and I also encountered problem in running after update to newer version of CUDA and Theano. I am implementing a PyTorch version ([here](https://github.com/memray/seq2seq-keyphrase-pytorch)) and it will be released soon. Stay tuned.
+I found that the development of Theano has been terminated and I also encountered problem in running after update to newer version of CUDA and Theano (now it's CUDA 9.0 and Theano 1.0. I really regret doing so lol). 
+
+I am implementing a PyTorch version ([here](https://github.com/memray/seq2seq-keyphrase-pytorch)) and it will be released soon. Stay tuned.
 
 Run
 ==========
