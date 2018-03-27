@@ -122,7 +122,7 @@ def softmax(x):
     return T.nnet.softmax(x.reshape((-1, x.shape[-1]))).reshape(x.shape)
 
 
-def masked_softmax(x, mask, err=1e-9):
+def masked_softmax(x, mask, err=1e-7):
     assert x.ndim == 2, 'support two-dimension'
     weights  = softmax(x)
     weights *= mask

@@ -11,7 +11,6 @@ import numpy as np
 import re
 
 import emolga.dataset.build_dataset as db
-from keyphrase.config import setup_keyphrase_all
 
 sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
 SENTENCEDELIMITER = '<eos>'
@@ -199,7 +198,8 @@ def get_none_phrases(source_text, source_postag, max_len):
 
 
 if __name__ == '__main__':
-    config = setup_keyphrase_all()
+    import keyphrase.config as configs
+    config = configs.setup_keyphrase_all()
     test_set = db.deserialize_from_file(
         config['path'] + '/dataset/keyphrase/' + config['data_process_name'] + 'semeval.testing.pkl')
     for s_index, s_str, s_tag in zip(test_set['source'], test_set['source_str'], [[s[1] for s in d ]for d in test_set['tagged_source']]):

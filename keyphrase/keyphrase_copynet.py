@@ -1,7 +1,8 @@
 import os
 # set environment variables in advance of importing theano as well as any possible module
-os.environ['PATH'] = "/usr/local/cuda-8.0/bin:/usr/local/cuda-8.0/lib64:" + os.environ['PATH']
-os.environ['THEANO_FLAGS'] = 'device=gpu'
+# os.environ['PATH'] = "/usr/local/cuda-9.0/bin:/usr/local/cuda-9.0/lib64:" + os.environ['PATH']
+os.environ['THEANO_FLAGS'] = 'device=cuda0,floatX=float32,optimizer=fast_compile,exception_verbosity=high'
+# os.environ['CPLUS_INCLUDE_PATH'] = '/usr/local/cuda-9.0/include'
 
 import logging
 import time
@@ -22,12 +23,12 @@ __email__ = "rui.meng@pitt.edu"
 
 
 import theano
-theano.config.optimizer='fast_compile'
+# theano.config.optimizer='fast_compile'
 # os.environ['THEANO_FLAGS'] = 'device=cpu'
 
 from emolga.basic import optimizers
 
-theano.config.exception_verbosity='high'
+# theano.config.exception_verbosity='high'
 # theano.config.compute_test_value = 'warn'
 
 from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
@@ -43,7 +44,7 @@ from fuel import datasets
 from fuel import transformers
 from fuel import schemes
 
-setup = setup_keyphrase_all # setup_keyphrase_all_testing
+setup = setup_keyphrase_stable
 
 class LoggerWriter:
     def __init__(self, level):
@@ -115,7 +116,7 @@ def cc_martix(source, target):
     '''
     return the copy matrix, size = [nb_sample, max_len_source, max_len_target]
     '''
-    cc = np.zeros((source.shape[0], target.shape[1], source.shape[1]), dtype='float32')
+    cc = np.zeros((source.shape[0], target.shape[1], source.shape[1]), dtype='int16')
     for k in range(source.shape[0]): # go over each sample in source batch
         for j in range(target.shape[1]): # go over each word in target (all target have same length after padding)
             for i in range(source.shape[1]): # go over each word in source
@@ -354,6 +355,7 @@ if __name__ == '__main__':
 
                     # get a new mini-mini batch
                     while mini_data_idx < len(data_s) and stack_size + len(data_s[mini_data_idx]) * len(data_t[mini_data_idx]) < max_size:
+                        # mini_data_s.append(data_s[mini_data_idx][:300]) # truncate to reduce memory usage
                         mini_data_s.append(data_s[mini_data_idx])
                         mini_data_t.append(data_t[mini_data_idx])
                         stack_size += len(data_s[mini_data_idx]) * len(data_t[mini_data_idx])
@@ -361,7 +363,7 @@ if __name__ == '__main__':
                     mini_data_s = np.asarray(mini_data_s)
                     mini_data_t = np.asarray(mini_data_t)
 
-                    logger.info('Training minibatch %d/%d' % (mini_data_idx, len(data_s)))
+                    logger.info('Training minibatch %d/%d, avg_len=%.2f' % (mini_data_idx, len(data_s), sum([len(s) for s in mini_data_s])/mini_data_idx))
 
                     # fit the mini-mini batch
                     if config['copynet']:

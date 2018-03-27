@@ -174,7 +174,7 @@ class PtrDecoder(Model):
         logger.info('done.')
 
         # sampler: 1 x 1
-        prev_idx  = T.vector('prev_idx', dtype='int64')
+        prev_idx  = T.vector('prev_idx', dtype='int32')
         prev_stat = T.matrix('prev_state', dtype='float32')
         inputs    = T.tensor3()
         source    = T.tensor3()
@@ -221,7 +221,7 @@ class PtrDecoder(Model):
 
         # get initial state of decoder RNN with context
         next_state = self.get_init_state(context)
-        next_word = -1 * np.ones((1,)).astype('int64')  # indicator for the first target word (bos target)
+        next_word = -1 * np.ones((1,)).astype('int32')  # indicator for the first target word (bos target)
 
         # Start searching!
         for ii in xrange(maxlen):
@@ -513,8 +513,8 @@ class PointerDecoder(Model):
         logger.info('done.')
 
         # sampler: 1 x 1
-        prev_idxh = T.vector('prev_idxh', dtype='int64')
-        prev_idxt = T.vector('prev_idxt', dtype='int64')
+        prev_idxh = T.vector('prev_idxh', dtype='int32')
+        prev_idxt = T.vector('prev_idxt', dtype='int32')
 
         prev_stat = T.matrix('prev_state', dtype='float32')
         inputs    = T.tensor3()
@@ -563,8 +563,8 @@ class PointerDecoder(Model):
         # get initial state of decoder RNN with context
         next_state = self.get_init_state(context)
 
-        next_wordh = -1 * np.ones((1,)).astype('int64')  # indicator for the first target word (bos target)
-        next_wordt = -1 * np.ones((1,)).astype('int64')
+        next_wordh = -1 * np.ones((1,)).astype('int32')  # indicator for the first target word (bos target)
+        next_wordt = -1 * np.ones((1,)).astype('int32')
 
         # Start searching!
         for ii in xrange(maxlen):
