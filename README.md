@@ -58,13 +58,13 @@ Data
 ==========
 The training data mentioned above is pickled. You can download here: [experiment_dataset.zip](https://drive.google.com/file/d/0B-7HD48qQzxVQkl5UHBZZVJQM00/view?usp=sharing). Just in case you are in China Mainland where downloading this large file is painful, I provide another [link](http://pan.baidu.com/s/1b46mwY) on Baidu Pan Cloud Drive. 
 
-If you are just interested in using the KP20k dataset, you can get the data as well: [kp20k.zip](https://drive.google.com/open?id=0B-7HD48qQzxVd2plbUlGdFduRDQ). 
+If you are just interested in using the KP20k dataset, you can get the data as well: [kp20k.zip](https://drive.google.com/open?id=1ZTQEGZSq06kzlPlOv4yGjbUpoDrNxebR).
 
 The KP20k dataset is released in JSON format. Each data point contains the title, abstract and keywords of a paper.
 
 Part | #(data) 
 --- | --- 
-Training | 530,803 
+Training | 530,809
 Validation | 20,000
 Test | 20,000
 

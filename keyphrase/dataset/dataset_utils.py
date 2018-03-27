@@ -103,14 +103,15 @@ def build_data(data, idx2word, word2idx):
         #     # C = np.asarray([[w == l for w in source] for l in target], dtype='float32')
         #     C = [0 if w not in source else source.index(w) + Lmax for w in target]
         # else:
+
         A = [word2idx[w] if w in word2idx else word2idx['<unk>'] for w in source]
         B = [[word2idx[w] if w in word2idx else word2idx['<unk>'] for w in p] for p in target]
         # C = np.asarray([[w == l for w in source] for l in target], dtype='float32')
         C = [[0 if w not in source else source.index(w) + Lmax for w in p] for p in target]
 
-        # actually only source,target,target_c are used in model
-        instance['source_str'] += [source]
-        instance['target_str'] += [target]
+        # actually only source,target are used in model
+        # instance['source_str'] += [source]
+        # instance['target_str'] += [target]
         instance['source'] += [A]
         instance['target'] += [B]
         # instance['target_c'] += [C]
@@ -122,6 +123,7 @@ def build_data(data, idx2word, word2idx):
             print(A)
             print(B)
             print(C)
+            print('voc size=%d' % len(word2idx))
     return instance
 
 def load_pairs(records, process_type=1 ,do_filter=False):

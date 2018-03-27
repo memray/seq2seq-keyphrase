@@ -104,7 +104,7 @@ def load_data_and_dict(training_dataset):
     train_pairs         = numpy.delete(train_pairs, validation_ids, axis=0)
 
     #
-    # target_dir = '/Users/memray/Project/seq2seq-keyphrase/dataset/keyphrase/baseline-data/maui/ke20k/train/'
+    # target_dir = '/Users/memray/Project/seq2seq-keyphrase/dataset/keyphrase/baseline-data/maui/kp20k/train/'
     # for r_id, r in enumerate(validation_records):
     #     with open(target_dir+r_id+'.txt', 'w') as textfile:
     #         textfile.write(r.title+'\n'+r.text)
@@ -112,9 +112,9 @@ def load_data_and_dict(training_dataset):
     #         for p in r.phrases:
     #             phrasefile.write('%s\t1\n' % p)
 
-    print('#(Training Data after Filtering Validate & Test data)=%d' % len(train_pairs))
+    print('#(Training Data after Filtering out Validate & Test data)=%d' % len(train_pairs))
 
-    print('Preparing testing data KE20k')
+    print('Preparing testing data kp20k')
     # keep a copy of testing data
     if 'testing_id' in config and os.path.exists(config['testing_id']):
         testing_ids = deserialize_from_file(config['testing_id'])
@@ -123,41 +123,49 @@ def load_data_and_dict(training_dataset):
         testing_ids         = numpy.random.randint(0, len(training_records), config['validation_size'])
         serialize_to_file(testing_ids, config['testing_id'])
 
-    testing_records['ke20k']  = training_records[testing_ids]
+    testing_records['kp20k']  = training_records[testing_ids]
     training_records          = numpy.delete(training_records, testing_ids, axis=0)
     train_pairs               = numpy.delete(train_pairs, testing_ids, axis=0)
 
-    # dump_samples_to_json(training_records, config['path'] + '/dataset/keyphrase/million-paper/ke20k_training.json')
-    # dump_samples_to_json(validation_records, config['path'] + '/dataset/keyphrase/million-paper/ke20k_validation.json')
-    # dump_samples_to_json(testing_records['ke20k'], config['path'] + '/dataset/keyphrase/million-paper/ke20k_testing.json')
+    dump_samples_to_json(training_records, config['path'] + '/dataset/keyphrase/million-paper/kp20k_training.json')
+    dump_samples_to_json(validation_records, config['path'] + '/dataset/keyphrase/million-paper/kp20k_validation.json')
+    dump_samples_to_json(testing_records['kp20k'], config['path'] + '/dataset/keyphrase/million-paper/kp20k_testing.json')
 
-    # path = '/home/memray/Project/deep_learning/seq2seq-keyphrase/dataset/keyphrase/baseline-data/ke20k/'
-    # keyphrase_count = 0
-    # for i,r in enumerate(testing_records['ke20k']):
-    #     with open(path+'text/'+ str(i) +'.txt', 'w') as f:
-    #         f.write(r['title']+'. \n'+r['abstract'])
-    #     with open(path+'keyphrase/'+ str(i) +'.txt', 'w') as f:
-    #         keyphrases = re.sub(r'\(.*?\)', ' ', r['keyword'])
-    #         keyphrases = re.split('[,;]',keyphrases)
-    #         keyphrase_count += len(keyphrases)
-    #         f.write('\n'.join(keyphrases))
-    #
-    # print('length of testing ids: %d' % len(testing_ids))
-    # print('length of actually testing samples: %d' % len(testing_records['ke20k']))
-    # print('average number of keyphrases: %f' % (float(keyphrase_count)/ float(len(testing_records['ke20k']))))
-    exit()
+    path = config['path'] + '/dataset/keyphrase/baseline-data/kp20k/'
+    keyphrase_count = 0
+    for i,r in enumerate(testing_records['kp20k']):
+        with open(path+'text/'+ str(i) +'.txt', 'w') as f:
+            f.write(r['title']+'. \n'+r['abstract'])
+        with open(path+'keyphrase/'+ str(i) +'.txt', 'w') as f:
+            keyphrases = re.sub(r'\(.*?\)', ' ', r['keyword'])
+            keyphrases = re.split('[,;]',keyphrases)
+            keyphrase_count += len(keyphrases)
+            f.write('\n'.join(keyphrases))
+
+    print('length of testing ids: %d' % len(testing_ids))
+    print('length of actually testing samples: %d' % len(testing_records['kp20k']))
+    print('average number of keyphrases: %f' % (float(keyphrase_count)/ float(len(testing_records['kp20k']))))
+    # exit()
 
     test_pairs                = dict([(k, dataset_utils.load_pairs(v, do_filter=False)[1]) for (k,v) in testing_records.items()])
 
     print('Building dicts')
     # if voc exists and is assigned, load it, overwrite the wordfreq
-    if 'voc' in config:
+    if 'voc' in config and os.path.exists(config['voc']):
         print('Loading dicts from %s' % config['voc'])
         wordfreq = dict(deserialize_from_file(config['voc']))
+    else:
+        # export vocabulary to file for manual check
+        sorted_wordfreq = sorted(wordfreq.items(), key=lambda a: a[1], reverse=True)
+        serialize_to_file(sorted_wordfreq, config['voc'])
+        serialize_to_file_json(sorted_wordfreq, config['voc'].replace('pkl', 'json'))
+
+        with open(config['path'] + '/dataset/keyphrase/'+config['data_process_name']+'/voc_list.txt', 'w') as f_:
+            for (k,f) in sorted_wordfreq:
+                f_.write('%s\t%d\n' % (k,f))
+
     idx2word, word2idx = build_dict(wordfreq)
 
-    # use character-based model [on]
-    # use word-based model     [off]
     print('Mapping tokens to indexes')
     train_set           = dataset_utils.build_data(train_pairs, idx2word, word2idx)
     validation_set      = dataset_utils.build_data(validation_pairs, idx2word, word2idx)
@@ -178,18 +186,15 @@ if __name__ == '__main__':
 
     start_time = time.clock()
     train_set, validation_set, test_set, idx2word, word2idx = load_data_and_dict(config['training_dataset'])
-    # serialize_to_file([train_set, validation_set, test_set, idx2word, word2idx], config['dataset'])
+    serialize_to_file([train_set, validation_set, test_set, idx2word, word2idx], config['dataset'])
 
     print('Finish processing and dumping: %d seconds' % (time.clock()-start_time))
 
 
-
-
-    #
     # # export vocabulary to file for manual check
     # wordfreq = sorted(wordfreq.items(), key=lambda a: a[1], reverse=True)
     # serialize_to_file(wordfreq, config['voc'])
-
+    #
     # wordfreq = deserialize_from_file(config['voc'])
     # with open(config['path'] + '/dataset/keyphrase/'+config['data_process_name']+'/voc_list.txt', 'w') as f_:
     #     for (k,f) in wordfreq:

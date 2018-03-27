@@ -1,11 +1,14 @@
+import os
+# set environment variables in advance of importing theano as well as any possible module
+os.environ['PATH'] = "/usr/local/cuda-8.0/bin:/usr/local/cuda-8.0/lib64:" + os.environ['PATH']
+os.environ['THEANO_FLAGS'] = 'device=gpu'
+
 import logging
 import time
 import numpy as np
 import sys
 import copy
 import math
-
-import theano
 
 import keyphrase_utils
 from keyphrase.dataset import keyphrase_test_dataset
@@ -18,8 +21,9 @@ __author__ = "Rui Meng"
 __email__ = "rui.meng@pitt.edu"
 
 
+import theano
 theano.config.optimizer='fast_compile'
-os.environ['THEANO_FLAGS'] = 'device=cpu'
+# os.environ['THEANO_FLAGS'] = 'device=cpu'
 
 from emolga.basic import optimizers
 
@@ -176,7 +180,6 @@ def build_data(data):
 
 
 if __name__ == '__main__':
-
     # prepare logging.
     config  = setup()   # load settings.
 
@@ -575,6 +578,7 @@ if __name__ == '__main__':
                 inputs_unk = np.asarray(unk_filter(np.asarray(test_s, dtype='int32')), dtype='int32')
                 # inputs_ = np.asarray(test_s, dtype='int32')
 
+                inputs_unk = theano.shared(inputs_unk)
 
                 if config['return_encoding']:
                     input_encoding, prediction, score, output_encoding = agent.generate_multiple(inputs_unk[None, :], return_all=True, return_encoding=True)
