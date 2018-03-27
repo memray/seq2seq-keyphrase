@@ -45,7 +45,7 @@ class Attention(Layer):
                  Cov=None):
         assert X.ndim + 1 == S.ndim, 'source should be one more dimension than target.'
         # X is the decoder representation of t-1:    (nb_samples, hidden_dims)
-        # S is the hidden representation of source text:    (nb_samples, maxlen_s, context_dim)
+        # S is the context vector, hidden representation of source text:    (nb_samples, maxlen_s, context_dim)
         # X_mask: mask, an array showing which elements in X are not 0 [nb_sample, max_len]
         # Cov is the coverage vector (nb_samples, maxlen_s)
 
@@ -55,14 +55,15 @@ class Attention(Layer):
             if not Smask:
                 Smask = Smask[None, :]
 
-        Eng   = dot(X[:, None, :], self.Wa) + dot(S, self.Ua)  # (nb_samples, source_num, hidden_dims)
+        Eng   = dot(X[:, None, :], self.Wa) + dot(S, self.Ua)  # Concat Attention by Bahdanau et al. 2015 (nb_samples, source_num, hidden_dims)
         Eng   = self.tanh(Eng)
-        # location aware:
+
+        # location aware by adding previous coverage information, let model learn how to handle coverage
         if self.coverage:
             Eng += dot(Cov[:, :, None], self.Ca)  # (nb_samples, source_num, hidden_dims)
 
         Eng   = dot(Eng, self.va)
-        Eng   = Eng[:, :, 0]                      # ? (nb_samples, source_num)
+        Eng   = Eng[:, :, 0]                      # 3rd dim is 1, discard it (nb_samples, source_num)
 
         if Smask is not None:
             # I want to use mask!

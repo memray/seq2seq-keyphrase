@@ -113,10 +113,10 @@ def prepare_batch(batch, mask, fix_len=None):
 
 def cc_martix(source, target):
     '''
-    return the copy matrix, size = [nb_sample, max_len_source, max_len_target]
+    return the copy matrix, size = [nb_sample, max_len_target, max_len_source]
     '''
     cc = np.zeros((source.shape[0], target.shape[1], source.shape[1]), dtype='float32')
-    for k in range(source.shape[0]): # go over each sample in source batch
+    for k in range(source.shape[0]): # go over each sample in batch
         for j in range(target.shape[1]): # go over each word in target (all target have same length after padding)
             for i in range(source.shape[1]): # go over each word in source
                 if (source[k, i] == target[k, j]) and (source[k, i] > 0): # if word match, set cc[k][j][i] = 1. Don't count non-word(source[k, i]=0)
@@ -201,6 +201,7 @@ if __name__ == '__main__':
 
     train_set, validation_set, test_sets, idx2word, word2idx = deserialize_from_file(config['dataset'])
     test_sets = keyphrase_test_dataset.load_additional_testing_data(['inspec'], idx2word, word2idx, config, postagging=False)
+    test_sets = keyphrase_test_dataset.load_additional_testing_data(['kp20k'], idx2word, word2idx, config, postagging=False)
 
     logger.info('#(training paper)=%d' % len(train_set['source']))
     logger.info('#(training keyphrase)=%d' % sum([len(t) for t in train_set['target']]))
