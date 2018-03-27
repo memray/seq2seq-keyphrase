@@ -122,7 +122,6 @@ def build_data(data, idx2word, word2idx):
             print(A)
             print(B)
             print(C)
-            print('voc size=%d' % len(word2idx))
     return instance
 
 def load_pairs(records, process_type=1 ,do_filter=False):

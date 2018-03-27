@@ -122,7 +122,7 @@ class Encoder(Model):
                 return_embed=True:
                     X_out:  a list of vectors [nb_sample, max_len, 2*enc_hidden_dim], encoding of each time state (concatenate both forward and backward RNN)
                     X:      embedding of text X [nb_sample, max_len, enc_embedd_dim]
-                    X_mask: mask, an array showing which elements in X are not 0 [nb_sample, max_len]
+                    X_mask: mask, an array showing which elements in X are not 0 [nb_sample, src_max_len]
                     X_tail: encoding of ending of X, seems not make sense for bidirectional model (head+tail) [nb_sample, 2*enc_hidden_dim]
 
         nb_sample:  number of samples, defined by batch size
@@ -882,15 +882,16 @@ class DecoderAtt(Decoder):
         """
         Build the Computational Graph ::> Context is essential
         target:     (batch_size, trg_len)
-        cc_matrix:  (batch_size, trg_len, src_len), cc_matrix[i][j][k]=1 if j-th word in target matches the k-th word in source
-        context:    (batch_size, src_len, 2*enc_hidden_dim), encoding of each time step (concatenate both forward and backward RNN encodings)
+        cc_matrix:  (batch_size, trg_len, src_len), cc_matrix[i][j][k]=1 if in the i-th sample, the j-th word in target matches the k-th word in source
+        context:    (batch_size, src_len, 2 * enc_hidden_dim), encoding of each time step (concatenate both forward and backward RNN encodings)
         context:    (nb_samples, max_len, contxt_dim)
-        c_mask:     (batch_size, src_len) mask, X_mask[i][j]=1 means j-th word of batch i in X is not 0 (index of <pad>)
+        c_mask:     (batch_size, src_len) mask, X_mask[i][j]=1 means j-th word of sample i in X is not 0 (index of <pad>)
         """
-        assert c_mask is not None, 'context must be supplied for this decoder.'
+        assert c_mask is not None, 'c_mask must be supplied for this decoder.'
         assert context.ndim == 3, 'context must have 3 dimentions.'
-        # (nb_samples, max_len, embed_dim), passed through a dense layer (dec_contxt_dim * dec_embedd_dim), convert context to embed?
-        context_A = self.Is(context)
+
+        # A bridge layer transforming context vector of encoder_dim to decoder_dim, Is=(2 * enc_hidden_dim, dec_embedd_dim) if it's bidirectional
+        context_A = self.Is(context) # (nb_samples, max_src_len, dec_embedd_dim)
 
         '''
         X:          embedding of target sequences(batch_size, trg_len, embedding_dim)
@@ -925,20 +926,24 @@ class DecoderAtt(Decoder):
             xl_mask:(nb_samples, )                  if x has any copyable word in source sequence
             -----------------------------------------
             prev_h: (nb_samples, hidden_dims)       hidden vector of previous step
-            prev_a: (nb_samples, maxlen_s)
-            cov:    (nb_samples, maxlen_s)  *** coverage ***
+            prev_a: (nb_samples, maxlen_s)          a distribution of source telling which words are copy-attended in the previous step (initialized with zero)
+            cov:    (nb_samples, maxlen_s)          a coverage vector telling which parts have been covered, implemented by attention (initialized with zero)
             -----------------------------------------
-            cc:     (nb_samples, maxlen_s, context_dim)     context, encoding of source text
-            cm:     (nb_samples, maxlen_s)                  copy_mask,
-            ca:     (nb_samples, maxlen_s, ebd_dim)         context_A,
+            cc:     (nb_samples, maxlen_s, context_dim)     original context, encoding of source text
+            cm:     (nb_samples, maxlen_s)                  mask, (batch_size, src_len), X_mask[i][j]=1 means j-th word of sample i in X is not <pad>
+            ca:     (nb_samples, maxlen_s, decoder_dim)     converted context_A, the context vector transformed by the bridge layer Is()
             """
-            # compute the attention and get the context vector
+            '''
+            Generative Decoding
+            '''
+            # Compute the attention and get the context weight, <pad> in source is masked
             prob  = self.attention_reader(prev_h, cc, Smask=cm, Cov=cov)
             ncov  = cov + prob
 
+            # Compute the weighted context vector
             cxt   = T.sum(cc * prob[:, :, None], axis=1)
 
-            # get new input bu concatenating current input word x and prev_a
+            # Input feeding: obtain the new input by concatenating current input word x and previous attended context
             x_in  = T.concatenate([x, T.sum(ca * prev_a[:, :, None], axis=1)], axis=-1)
 
             # compute the current hidden states of the RNN. hidden state of last time, shape=(nb_samples, output_emb_dim)
@@ -953,47 +958,50 @@ class DecoderAtt(Decoder):
 
             # readout the word logits
             r_in    = T.concatenate(r_in, axis=-1) # shape=(nb_samples, output_emb_dim)
-            r_out = self.hidden_readout(next_h)  # get logits, (nb_samples, voc_size)
+            r_out   = self.hidden_readout(next_h)  # obtain the generative logits, (nb_samples, voc_size)
             if self.config['context_predict']:
                 r_out += self.context_readout(cxt)
             if self.config['bigram_predict']:
                 r_out += self.prev_word_readout(x_in)
 
-            # Get the generate-mode probability: logits -> probs
+            # Get the generate-mode output = tanh(r_out), note it's not logit nor prob
             for l in self.output_nonlinear:
                 r_out = l(r_out)
 
-            # copynet decoding
-            # Os layer, concate emb of last word and hidden vector: [dec_readout_dim (300) + dec_embedd_dim (150), dec_contxt_dim]
-            key     = self.Os(r_in)  # (nb_samples, cxt_dim) :: key
+            '''
+            Copying Decoding
+            '''
+            # Eq.8, key=h_j*W_c. Os layer (dec_readout_dim+dec_embedd_dim, dec_contxt_dim), dec_readout_dim=output_emb_dim + enc_context_dim + dec_embed_dim
+            key     = self.Os(r_in)  # output=(nb_samples, dec_contxt_dim) :: key for locating where to copy
 
-            # zeta(yt-1) in Eq.9, copy attention?
-            #    (nb_samples, 1, cxt_dim) * (nb_samples, maxlen_s, cxt_dim)
+            # Eq.8, compute the copy attention weights, but where is the a non-linear activation function?
+            #    (nb_samples, 1, dec_contxt_dim) * (nb_samples, src_maxlen, cxt_dim) -> sum(nb_samples, src_maxlen, 1) -> (nb_samples, src_maxlen)
             Eng     = T.sum(key[:, None, :] * cc, axis=-1)
 
-            # # gating
+            # Copy gating, determine the contribution from generative and copying
             if self.config['copygate']:
-                gt     = self.sigmoid(self.Gs(r_in))  # (nb_samples, 1)
+                gt     = self.sigmoid(self.Gs(r_in))  # Gs=(dec_readout_dim + dec_embedd_dim, 1), output=(nb_samples, 1)
+                # plus a log prob to stabilize the computation. but are r_out and Eng log-ed probs?
                 r_out += T.log(gt.flatten()[:, None])
                 Eng   += T.log(1 - gt.flatten()[:, None])
 
                 # r_out *= gt.flatten()[:, None]
                 # Eng   *= 1 - gt.flatten()[:, None]
 
-            #
+            # compute the logSumExp of both generative and copying probs, <pad> in source is masked
             EngSum  = logSumExp(Eng, axis=-1, mask=cm, c=r_out)
 
-            # T.exp(r_out - EngSum) is generate_prob, T.exp(Eng - EngSum) * cm is copy_prob?
+            # (nb_samples, vocab_size + maxlen_s): T.exp(r_out - EngSum) is generate_prob, T.exp(Eng - EngSum) * cm is copy_prob
             next_p  = T.concatenate([T.exp(r_out - EngSum), T.exp(Eng - EngSum) * cm], axis=-1)
             '''
             self.config['dec_voc_size'] = 50000
                 next_b: the first 50000 probs in next_p is p_generate
                 next_c: probs after 50000 in next_p is p_copy
             '''
-            next_c  = next_p[:, self.config['dec_voc_size']:] * ll           # (nb_samples, maxlen_s)
-            next_b  = next_p[:, :self.config['dec_voc_size']]
-            sum_a   = T.sum(next_c, axis=1, keepdims=True, dtype='float32')                   # (nb_samples,)
-            next_a  = (next_c / (sum_a + err)) * xl_mask[:, None]            # numerically consideration
+            next_c  = next_p[:, self.config['dec_voc_size']:] * ll           # copy_prob, mask off (ignore) the non-copyable words: (nb_samples, maxlen_s) * (nb_samples, maxlen_s) = (nb_samples, maxlen_s)
+            next_b  = next_p[:, :self.config['dec_voc_size']]                # generate_prob
+            sum_a   = T.sum(next_c, axis=1, keepdims=True)                   # sum of copy_prob, telling how helpful the copy part is (nb_samples,)
+            next_a  = (next_c / (sum_a + err)) * xl_mask[:, None]            # normalize the copy_prob for numerically consideration (nb_samples, maxlen_s), ignored if there is not word can be copied from source
 
             next_c  = T.cast(next_c, 'float32')
             next_a  = T.cast(next_a, 'float32')
@@ -1007,7 +1015,14 @@ class DecoderAtt(Decoder):
             non_sequences=[context, c_mask, context_A]
         )
 
-        # (trg_len, batch_size, x) -> (batch_size, trg_len, x)
+        '''
+        shuffle (trg_len, batch_size, x) -> (batch_size, trg_len, x)
+        X_out:          hidden vector of each decoding step (not useful for computing error)
+        source_prob:    normalized copy_prob distribution of each decoding step (not useful for computing error)
+        coverages:      coverage vector  (not useful for computing error)
+        source_sum:     generate_prob distribution of each decoding step
+        prob_dist:      sum of copy_prob of each decoding step
+        '''
         X_out, source_prob, coverages, source_sum, prob_dist = [z.dimshuffle((1, 0, 2)) for z in outputs]
         X        = X.dimshuffle((1, 0, 2))
         X_mask   = X_mask.dimshuffle((1, 0))
@@ -1018,6 +1033,7 @@ class DecoderAtt(Decoder):
         U_mask  += (1 - U_mask) * (1 - XL_mask)
 
         # The most different part is here !!
+        # self._grab_prob(prob_dist, target) computes the error of generative part, source_sum.sum(axis=-1) gives the error of copying part
         log_prob = T.sum(T.log(
                    T.clip(self._grab_prob(prob_dist, target) * U_mask + source_sum.sum(axis=-1) + err, 1e-7, 1.0)
                    ) * X_mask, dtype='float32', axis=1)
@@ -1152,7 +1168,7 @@ class DecoderAtt(Decoder):
         # initial state of our Decoder.
         context   = T.tensor3()  # theano variable. shape=(n_sample, sent_len, 2*output_dim)
         c_mask    = T.matrix()   # mask of the input sentence.
-        context_A = self.Is(context) # an identity layer (do nothing but return the context)
+        context_A = self.Is(context) # an bridge layer
 
         init_h = self.Initializer(context[:, 0, :])
         init_a = T.zeros((context.shape[0], context.shape[1]))
@@ -1875,22 +1891,22 @@ class NRM(Model):
         cc_matrix = T.tensor3(dtype='int16')
 
         # encoding & decoding
-
-        code, _, c_mask, _ = self.encoder.build_encoder(inputs, None, return_sequence=True, return_embed=True)
+        # enc_context=[nb_sample, src_max_len, 2*enc_hidden_dim], c_mask=[nb_sample, src_max_len]
+        enc_context, _, c_mask, _ = self.encoder.build_encoder(inputs, None, return_sequence=True, return_embed=True)
         # code: (nb_samples, max_len, contxt_dim)
         if 'explicit_loc' in self.config:
             if self.config['explicit_loc']:
                 print('use explicit location!!')
-                max_len = code.shape[1]
+                max_len = enc_context.shape[1]
                 expLoc  = T.eye(max_len, self.config['encode_max_len'], dtype='float32')[None, :, :]
-                expLoc  = T.repeat(expLoc, code.shape[0], axis=0)
-                code    = T.concatenate([code, expLoc], axis=2)
+                expLoc  = T.repeat(expLoc, enc_context.shape[0], axis=0)
+                enc_context    = T.concatenate([enc_context, expLoc], axis=2)
 
         # self.decoder.build_decoder(target, cc_matrix, code, c_mask)
         #       feed target(index vector of target), cc_matrix(copy matrix), code(encoding of source text), c_mask (mask of source text) into decoder, get objective value
         #       logPxz,logPPL are tensors in [nb_samples,1], cross-entropy and Perplexity of each sample
         # normal seq2seq
-        logPxz, logPPL     = self.decoder.build_decoder(target, cc_matrix, code, c_mask)
+        logPxz, logPPL     = self.decoder.build_decoder(target, cc_matrix, enc_context, c_mask)
 
         # responding loss
         loss_rec = -logPxz
