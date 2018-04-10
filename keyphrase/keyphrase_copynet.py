@@ -579,7 +579,7 @@ if __name__ == '__main__':
                 inputs_unk = np.asarray(unk_filter(np.asarray(test_s, dtype='int32')), dtype='int32')
                 # inputs_ = np.asarray(test_s, dtype='int32')
 
-                inputs_unk = theano.shared(inputs_unk)
+                # inputs_unk = theano.shared(inputs_unk)
 
                 if config['return_encoding']:
                     input_encoding, prediction, score, output_encoding = agent.generate_multiple(inputs_unk[None, :], return_all=True, return_encoding=True)
@@ -598,12 +598,12 @@ if __name__ == '__main__':
                 progbar_test.update(idx, [])
 
                 # temporary save
-                if idx % 100 == 0:
-                    print('Saving dump to: '+ config['predict_path'] + 'predict.{0}.{1}.id={2}.pkl'.format(config['predict_type'], dataset_name, idx))
-                    serialize_to_file(
-                        [test_set, test_s_list, test_t_list, test_s_o_list, test_t_o_list, input_encodings, predictions,
-                         scores, output_encodings, idx2word],
-                        config['predict_path'] + 'predict.{0}.{1}.id={2}.pkl'.format(config['predict_type'], dataset_name, idx))
+                # if idx % 100 == 0:
+                #     print('Saving dump to: '+ config['predict_path'] + 'predict.{0}.{1}.id={2}.pkl'.format(config['predict_type'], dataset_name, idx))
+                #     serialize_to_file(
+                #         [test_set, test_s_list, test_t_list, test_s_o_list, test_t_o_list, input_encodings, predictions,
+                #          scores, output_encodings, idx2word],
+                #         config['predict_path'] + 'predict.{0}.{1}.id={2}.pkl'.format(config['predict_type'], dataset_name, idx))
 
             # store predictions in file
             serialize_to_file([test_set, test_s_list, test_t_list, test_s_o_list, test_t_o_list, input_encodings, predictions, scores, output_encodings, idx2word], config['predict_path'] + 'predict.{0}.{1}.pkl'.format(config['predict_type'], dataset_name))

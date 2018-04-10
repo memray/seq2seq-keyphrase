@@ -215,9 +215,10 @@ class DataLoader(object):
     def load_testing_data(self, word2idx):
         print('Loading testing dataset %s from %s' % (self.name, self.datadir))
         text_file_paths = [self.textdir + n_ for n_ in os.listdir(self.textdir) if n_.endswith('.txt')]
-        # here is problematic. keep phrases in either '.txt' or 'keyphrases', but don't keep both files (kp20k uses both, delete either one would be fine).
-        keyphrase_file_paths = [self.keyphrasedir + n_ for n_ in os.listdir(self.keyphrasedir) if n_.endswith('.keyphrases')]
-        # keyphrase_file_paths = [self.keyphrasedir + n_ for n_ in os.listdir(self.keyphrasedir) if n_.endswith('.txt')]
+        # here is problematic. keep phrases in either '.txt' or 'keyphrases', but don't keep both files (kp20k uses both, delete either one would be fine). Keep '.txt' only in the future
+        keyphrase_file_paths = [self.keyphrasedir + n_ for n_ in os.listdir(self.keyphrasedir) if n_.endswith('.txt')]
+        if len(keyphrase_file_paths) == 0:
+            keyphrase_file_paths = [self.keyphrasedir + n_ for n_ in os.listdir(self.keyphrasedir) if n_.endswith('.keyphrases')]
 
         def _load_text(path):
             with open(path, 'r') as f:

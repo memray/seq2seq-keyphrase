@@ -38,8 +38,8 @@ def setup_keyphrase_all():
     config['do_validate']     = False
 
     # do predicting?
-    # config['do_predict']      = True
-    config['do_predict']      = False
+    config['do_predict']      = True
+    # config['do_predict']      = False
 
     # do testing?
     config['do_evaluate']     = True
@@ -98,6 +98,7 @@ def setup_keyphrase_all():
     '''
     Predicting/evaluation settings
     '''
+    config['return_encoding']   = True
     config['baseline_data_path']     = config['path'] + '/dataset/keyphrase/baseline-data/'
     # whether to add length penalty on beam search results
     config['normalize_score']   = False
