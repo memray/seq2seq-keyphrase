@@ -17,7 +17,7 @@ import xml.etree.ElementTree as ET
 import keyphrase.dataset.dataset_utils as utils
 from emolga.utils.generic_utils import get_from_module
 
-from keyphrase.config import setup_keyphrase_all
+
 from emolga.dataset.build_dataset import deserialize_from_file, serialize_to_file
 import numpy as np
 
@@ -854,7 +854,8 @@ def load_additional_testing_data(testing_names, idx2word, word2idx, config, post
 from nltk.stem.porter import *
 from keyphrase.dataset import dataset_utils
 def check_data():
-    config = setup_keyphrase_all()
+    from keyphrase.config import setup_keyphrase_stable
+    config = setup_keyphrase_stable()
     train_set, validation_set, test_set, idx2word, word2idx = deserialize_from_file(config['dataset'])
 
     for dataset_name in config['testing_datasets']:

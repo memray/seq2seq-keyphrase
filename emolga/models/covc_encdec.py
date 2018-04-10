@@ -18,7 +18,7 @@ import math
 
 logger = logging.getLogger(__name__)
 RNN    = GRU             # change it here for other RNN models.
-err    = 1e-9
+err    = 1e-7
 
 
 class Encoder(Model):
@@ -221,12 +221,14 @@ class Encoder(Model):
             self.encode = theano.function([source, context],
                                           self.build_encoder(source, context,
                                                              return_embed=return_embed,
-                                                             return_sequence=return_sequence))
+                                                             return_sequence=return_sequence),
+                                            allow_input_downcast=True)
             self.gtenc  = theano.function([source, context],
                                           self.build_encoder(source, context,
                                                              return_embed=return_embed,
                                                              return_sequence=return_sequence,
-                                                             return_gates=True))
+                                                             return_gates=True),
+                                            allow_input_downcast=True)
         else:
             """
             return
@@ -238,7 +240,8 @@ class Encoder(Model):
             self.encode = theano.function([source],
                                           self.build_encoder(source, None,
                                                              return_embed=return_embed,
-                                                             return_sequence=return_sequence))
+                                                             return_sequence=return_sequence),
+                                          allow_input_downcast=True)
 
             """
             return
@@ -249,7 +252,8 @@ class Encoder(Model):
                                           self.build_encoder(source, None,
                                                              return_embed=return_embed,
                                                              return_sequence=return_sequence,
-                                                             return_gates=True))
+                                                             return_gates=True),
+                                          allow_input_downcast=True)
 
 
 class Decoder(Model):
@@ -494,6 +498,9 @@ class Decoder(Model):
                 cy    = xx * c   # the path without using RNN
                 x_out = self.RNN(x, mask=x_mask, C=c, init_h=prev_h, one_step=True)
                 hx    = (1 - xx) * x_out
+                cy    = T.cast(cy, 'float32')
+                x_out = T.cast(x_out, 'float32')
+                hx    = T.cast(hx, 'float32')
                 return x_out, hx, cy
 
             outputs, _ = theano.scan(
@@ -607,11 +614,11 @@ class Decoder(Model):
         init_h = self.Initializer(context)
         logger.info('compile the function: get_init_state')
         self.get_init_state \
-            = theano.function([context], init_h, name='get_init_state')
+            = theano.function([context], init_h, name='get_init_state', allow_input_downcast=True)
         logger.info('done.')
 
         # word sampler: 1 x 1
-        prev_word = T.vector('prev_word', dtype='int64')
+        prev_word = T.vector('prev_word', dtype='int32')
         prev_stat = T.matrix('prev_state', dtype='float32')
         next_prob, next_sample, next_stat \
             = self._step_sample(prev_word, prev_stat, context)
@@ -621,7 +628,7 @@ class Decoder(Model):
         inputs = [prev_word, prev_stat, context]
         outputs = [next_prob, next_sample, next_stat]
 
-        self.sample_next = theano.function(inputs, outputs, name='sample_next')
+        self.sample_next = theano.function(inputs, outputs, name='sample_next', allow_input_downcast=True)
         logger.info('done')
         pass
 
@@ -665,7 +672,7 @@ class Decoder(Model):
 
         # get initial state of decoder RNN with context
         next_state = self.get_init_state(context)
-        next_word = -1 * np.ones((1,)).astype('int64')  # indicator for the first target word (bos target)
+        next_word = -1 * np.ones((1,)).astype('int32')  # indicator for the first target word (bos target)
 
         # Start searching!
         for ii in range(maxlen):
@@ -995,6 +1002,10 @@ class DecoderAtt(Decoder):
             next_b  = next_p[:, :self.config['dec_voc_size']]                # generate_prob
             sum_a   = T.sum(next_c, axis=1, keepdims=True)                   # sum of copy_prob, telling how helpful the copy part is (nb_samples,)
             next_a  = (next_c / (sum_a + err)) * xl_mask[:, None]            # normalize the copy_prob for numerically consideration (nb_samples, maxlen_s), ignored if there is not word can be copied from source
+
+            next_c  = T.cast(next_c, 'float32')
+            next_a  = T.cast(next_a, 'float32')
+
             return next_h, next_a, ncov, sum_a, next_b
 
         outputs, _ = theano.scan(
@@ -1018,14 +1029,14 @@ class DecoderAtt(Decoder):
         XL_mask  = XL_mask.dimshuffle((1, 0))
 
         # unk masking
-        U_mask   = T.ones_like(target) * (1 - T.eq(target, 1))
+        U_mask   = T.ones_like(target, dtype='float32') * (1 - T.eq(target, 1))
         U_mask  += (1 - U_mask) * (1 - XL_mask)
 
         # The most different part is here !!
         # self._grab_prob(prob_dist, target) computes the error of generative part, source_sum.sum(axis=-1) gives the error of copying part
         log_prob = T.sum(T.log(
-                   T.clip(self._grab_prob(prob_dist, target) * U_mask + source_sum.sum(axis=-1) + err, 1e-10, 1.0)
-                   ) * X_mask, axis=1)
+                   T.clip(self._grab_prob(prob_dist, target) * U_mask + source_sum.sum(axis=-1) + err, 1e-7, 1.0)
+                   ) * X_mask, dtype='float32', axis=1)
         log_ppl  = log_prob / (Count + err)
 
         if return_count:
@@ -1165,11 +1176,11 @@ class DecoderAtt(Decoder):
 
         logger.info('compile the function: get_init_state')
         self.get_init_state \
-            = theano.function([context], [init_h, init_a, cov], name='get_init_state')
+            = theano.function([context], [init_h, init_a, cov], name='get_init_state', allow_input_downcast=True)
         logger.info('done.')
 
         # word sampler: 1 x 1
-        prev_word = T.vector('prev_word', dtype='int64')
+        prev_word = T.vector('prev_word', dtype='int32')
         prev_stat = T.matrix('prev_state', dtype='float32')
         prev_a    = T.matrix('prev_a', dtype='float32')
         prev_cov  = T.matrix('prev_cov', dtype='float32')
@@ -1187,7 +1198,7 @@ class DecoderAtt(Decoder):
         logger.info('compile the function: sample_next')
         inputs  = [prev_word, prev_stat, prev_a, prev_cov, context, c_mask]
         outputs = [next_prob, next_sample, next_stat, ncov, alpha]
-        self.sample_next = theano.function(inputs, outputs, name='sample_next')
+        self.sample_next = theano.function(inputs, outputs, name='sample_next', allow_input_downcast=True)
         logger.info('done')
 
     """
@@ -1528,7 +1539,7 @@ class FnnDecoder(Model):
         context   = T.matrix()
         prob_dist = self.Pr(self.Tr(context))
         next_sample = self.rng.multinomial(pvals=prob_dist).argmax(1)
-        self.sample_next = theano.function([context], [prob_dist, next_sample], name='sample_next_{}'.format(self.prefix))
+        self.sample_next = theano.function([context], [prob_dist, next_sample], name='sample_next_{}'.format(self.prefix), allow_input_downcast=True)
         logger.info('done')
 
     def get_sample(self, context, argmax=True):
@@ -1632,7 +1643,8 @@ class RNNLM(Model):
         self.train_ = theano.function(train_inputs,
                                       [loss_rec, loss_ppl],
                                       updates=updates,
-                                      name='train_fun'
+                                      name='train_fun',
+                                      allow_input_downcast=True
                                       )
         logger.info("pre-training functions compile done.")
 
@@ -1779,7 +1791,8 @@ class AutoEncoder(RNNLM):
         self.train_ = theano.function(train_inputs,
                                       [loss_rec, loss_ppl],
                                       updates=updates,
-                                      name='train_fun')
+                                      name='train_fun',
+                                      allow_input_downcast=True)
         logger.info("pre-training functions compile done.")
 
         if mode == 'display' or mode == 'all':
@@ -1875,7 +1888,7 @@ class NRM(Model):
         # questions (theano variables)
         inputs    = T.imatrix()  # padded input word sequence (for training)
         target    = T.imatrix()  # padded target word sequence (for training)
-        cc_matrix = T.tensor3()
+        cc_matrix = T.tensor3(dtype='int16')
 
         # encoding & decoding
         # enc_context=[nb_sample, src_max_len, 2*enc_hidden_dim], c_mask=[nb_sample, src_max_len]
@@ -1898,7 +1911,7 @@ class NRM(Model):
         # responding loss
         loss_rec = -logPxz
         loss_ppl = T.exp(-logPPL)
-        loss     = T.mean(loss_rec)
+        loss     = T.mean(loss_rec, dtype='float32')
 
         updates  = self.optimizer.get_updates(self.params, loss)
 
@@ -1918,6 +1931,7 @@ class NRM(Model):
                                       [loss_rec, loss_ppl],
                                       updates=updates,
                                       name='train_nanguard_fun',
+                                      allow_input_downcast=True,
                                       mode=NanGuardMode(nan_is_error=True, inf_is_error=True, big_is_error=True))
         self.validate_ = theano.function(train_inputs,
                                       [loss_rec, loss_ppl],

@@ -698,7 +698,7 @@ class Decoder(Model):
         logger.info('done.')
 
         # word sampler: 1 x 1
-        prev_word = T.vector('prev_word', dtype='int64')
+        prev_word = T.vector('prev_word', dtype='int32')
         prev_stat = T.matrix('prev_state', dtype='float32')
 
         next_prob, next_sample, next_stat \
@@ -753,7 +753,7 @@ class Decoder(Model):
 
         # get initial state of decoder RNN with context
         next_state = self.get_init_state(context)
-        next_word = -1 * np.ones((1,)).astype('int64')  # indicator for the first target word (bos target)
+        next_word = -1 * np.ones((1,)).astype('int32')  # indicator for the first target word (bos target)
 
         # Start searching!
         for ii in xrange(maxlen):
@@ -1238,7 +1238,7 @@ class DecoderAtt(Decoder):
         logger.info('done.')
 
         # word sampler: 1 x 1
-        prev_word = T.vector('prev_word', dtype='int64')
+        prev_word = T.vector('prev_word', dtype='int32')
         prev_stat = T.matrix('prev_state', dtype='float32')
 
         next_prob, next_sample, next_stat \

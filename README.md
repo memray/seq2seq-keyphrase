@@ -9,6 +9,14 @@ One training dataset (**KP20k**), five testing datasets (**KP20k, Inspec, NUS, S
 
 Note that the model is trained on scientific papers (abstract and keyword) in Computer Science domain, so it's expected to work well only for CS papers.
 
+About How to Reproduce
+======================
+My model was trained on Ubuntu 14.04, Python 2.7, Theano 0.8, CUDA 8.0 and cuDNN v5.
+
+I found that the development of Theano has been terminated and I also encountered problem in running after update to newer version of CUDA and Theano (now it's CUDA 9.0 and Theano 1.0. I really regret doing so lol). 
+
+I am implementing a PyTorch version ([here](https://github.com/memray/seq2seq-keyphrase-pytorch)) and it will be released soon. Stay tuned.
+
 Run
 ==========
 
@@ -20,7 +28,7 @@ All the primary settings are stored in `keyphrase/config.py`. Training and Predi
 Some scripts for data processing are placed in `keyphrase/dataset/`. 
 
 ### Before running...
-Before running the code, please download this [experiment_dataset.zip](https://drive.google.com/file/d/0B-7HD48qQzxVQkl5UHBZZVJQM00/view?usp=sharing), unzip it to the project directory and overwrite the `Experiment/` and `dataset/`. 
+Before running the code, please download this [seq2seq-keyphrase.zip](https://drive.google.com/open?id=1Kqt5LimA65hFBxtTP4XREMBppcQcdeLB), unzip it to the project directory and overwrite the `Experiment/` and `dataset/`.
 
 `Experiment/` contains one pre-trained copy-seq2seq model *(experiments.keyphrase-all.one2one.copy.id=20170106-025508.epoch=4.batch=1000.pkl)* used in the paper, based on which you can extract keyphrases for your own corpus.
 Besides there are some output examples in this folder. 
@@ -52,11 +60,11 @@ The performances reported in the paper is done by `keyphrase/baseline/evaluate.p
 
 Note that the setting of evaluation is different from the settings used in training/predicting and don't be confused. It is loaded by calling `setup_keyphrase_baseline()` in `config.py`. Also if you want to reproduce the result of present keyphrase prediction (Section 5.1 of the paper), please set `config['predict_filter']` and `config['target_filter']` to 'appear-only' (line 292,293). Similarly, set them to 'non-appear-only' for reproducing absent keyphrase prediction (Section 5.2 of the paper). 
 
-You can find the awesome baseline implementations from [Kazi Saidul Hasan](http://www.hlt.utdallas.edu/~saidul/code.html) (TfIdf, TextRank, SimpleRank, ExpandRank) and [Alyona Medelyan](http://www.medelyan.com/software) (Maui and KEA). I also have put my keyphrase outputs [here](https://drive.google.com/open?id=1DsAno3lvMlr-5rCk4qohcy4U3m__Sfj8) for your convenience (unzip to `seq2seq-keyphrase-release/dataset/keyphrase/prediction`). 
+You can find the awesome baseline implementations from [Kazi Saidul Hasan](http://www.hlt.utdallas.edu/~saidul/code.html) (TfIdf, TextRank, SimpleRank, ExpandRank) and [Alyona Medelyan](http://www.medelyan.com/software) (Maui and KEA). My keyphrase outputs are included in the seq2seq-keyphrase.zip (`seq2seq-keyphrase-release/dataset/keyphrase/prediction/`).
 
 Data
 ==========
-The training data mentioned above is pickled. You can download here: [experiment_dataset.zip](https://drive.google.com/file/d/0B-7HD48qQzxVQkl5UHBZZVJQM00/view?usp=sharing). Just in case you are in China Mainland where downloading this large file is painful, I provide another [link](http://pan.baidu.com/s/1b46mwY) on Baidu Pan Cloud Drive. 
+The training data mentioned above is pickled. You can download here: [seq2seq-keyphrase.zip](https://drive.google.com/file/d/1Kqt5LimA65hFBxtTP4XREMBppcQcdeLB/view?usp=sharing).
 
 If you are just interested in using the KP20k dataset, you can get the data as well: [kp20k.zip](https://drive.google.com/open?id=1ZTQEGZSq06kzlPlOv4yGjbUpoDrNxebR).
 
@@ -68,7 +76,7 @@ Training | 530,809
 Validation | 20,000
 Test | 20,000
 
-The raw dataset (without filtering noisy data) is also provided. Please download [here](https://drive.google.com/open?id=0B-7HD48qQzxVQ3hIMW5NY1RWQ0E). 
+The raw dataset (without filtering noisy data) is also provided. Please download [here](https://drive.google.com/open?id=0B-7HD48qQzxVQ3hIMW5NY1RWQ0E).
 
 Cite
 ==========

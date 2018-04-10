@@ -565,7 +565,7 @@ class Decoder(Model):
         Build a sampler which only steps once.
         Typically it only works for one word a time?
         """
-        prev_word = T.vector('prev_word', dtype='int64')
+        prev_word = T.vector('prev_word', dtype='int32')
         prev_X    = self._step_embed(prev_word)
         self.prev_embed = theano.function([prev_word], prev_X)
 
@@ -615,7 +615,7 @@ class Decoder(Model):
         next_info  = self.Recurrence.get_init(context)
         # print 'sample with memory:\t', next_info['M'][0]
         # next_state = next_info['init_h']
-        next_word  = -1 * np.ones((1,)).astype('int64')  # indicator for the first target word (bos target)
+        next_word  = -1 * np.ones((1,)).astype('int32')  # indicator for the first target word (bos target)
         print '<0e~k>'
         # Start searching!
         for ii in xrange(maxlen):
