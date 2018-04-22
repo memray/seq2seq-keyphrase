@@ -630,7 +630,7 @@ class KP20k(DataLoader):
     def __init__(self, **kwargs):
         super(KP20k, self).__init__(**kwargs)
         self.datadir = self.basedir + '/dataset/keyphrase/baseline-data/kp20k/'
-        self.textdir = self.datadir + '/plain_text/'
+        self.textdir = self.datadir + '/text/'
         self.keyphrasedir = self.datadir + '/keyphrase/'
 
         self.postag_datadir = self.basedir + '/dataset/keyphrase/baseline-data/kp20k/'
