@@ -971,10 +971,10 @@ class DecoderAtt(Decoder):
             '''
             Copying Decoding
             '''
-            # Eq.8, key=h_j*W_c. Os layer (dec_readout_dim+dec_embedd_dim, dec_contxt_dim), dec_readout_dim=output_emb_dim + enc_context_dim + dec_embed_dim
+            # Eq.8, key=h_j*W_c. Os layer=tanh(dec_readout_dim+dec_embedd_dim, dec_contxt_dim), dec_readout_dim=output_emb_dim + enc_context_dim + dec_embed_dim
             key     = self.Os(r_in)  # output=(nb_samples, dec_contxt_dim) :: key for locating where to copy
 
-            # Eq.8, compute the copy attention weights, but where is the a non-linear activation function?
+            # Eq.8, compute the copy attention weights
             #    (nb_samples, 1, dec_contxt_dim) * (nb_samples, src_maxlen, cxt_dim) -> sum(nb_samples, src_maxlen, 1) -> (nb_samples, src_maxlen)
             Eng     = T.sum(key[:, None, :] * cc, axis=-1)
 

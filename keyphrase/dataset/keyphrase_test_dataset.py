@@ -549,14 +549,6 @@ class UMD(DataLoader):
         self.textdir = self.datadir + '/contentsubset/'
         self.keyphrasedir = self.datadir + '/gold/'
 
-class DUC2001(DataLoader):
-    def __init__(self, **kwargs):
-        super(DUC2001, self).__init__(**kwargs)
-        self.datadir = self.basedir + '/dataset/keyphrase/testing-data/UMD'
-        self.xmldir = self.datadir + '/acmparsed/'
-        self.textdir = self.datadir + '/contentsubset/'
-        self.keyphrasedir = self.datadir + '/gold/'
-
 class DUC(DataLoader):
     def __init__(self, **kwargs):
         super(DUC, self).__init__(**kwargs)

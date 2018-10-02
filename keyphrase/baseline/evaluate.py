@@ -34,8 +34,8 @@ def evaluate_(text_dir, target_dir, prediction_dir, model_name, dataset_name, do
 
     print('Evaluating on %s@%s' % (model_name, dataset_name))
     # Evaluation part
-    micro_metrics = []
-    micro_matches = []
+    macro_metrics = []
+    macro_matches = []
 
     doc_names = [name[:name.index('.')] for name in os.listdir(text_dir)]
 
@@ -172,8 +172,8 @@ def evaluate_(text_dir, target_dir, prediction_dir, model_name, dataset_name, do
             else:
                 metric_dict['mrr@%d' % number_to_predict] = 0
 
-        micro_metrics.append(metric_dict)
-        micro_matches.append(correctly_matched)
+        macro_metrics.append(metric_dict)
+        macro_matches.append(correctly_matched)
 
         '''
         Print information on each prediction
@@ -221,8 +221,8 @@ def evaluate_(text_dir, target_dir, prediction_dir, model_name, dataset_name, do
     Export the f@5 and f@10 for significance test
     '''
     for k in [5, 10]:
-        with open(config['predict_path'] + '/micro-f@%d-' % (k) + model_name+'-'+dataset_name+'.txt', 'w') as writer:
-            writer.write('\n'.join([str(m['f1@%d' % k]) for m in micro_metrics]))
+        with open(config['predict_path'] + '/macro-f@%d-' % (k) + model_name+'-'+dataset_name+'.txt', 'w') as writer:
+            writer.write('\n'.join([str(m['f1@%d' % k]) for m in macro_metrics]))
 
     '''
     Compute the corpus evaluation
@@ -232,17 +232,17 @@ def evaluate_(text_dir, target_dir, prediction_dir, model_name, dataset_name, do
     real_test_size = len(doc_names)
     overall_score = {}
     for k in [5, 10, 15]:
-        correct_number = sum([m['correct_number@%d' % k] for m in micro_metrics])
-        overall_target_number = sum([m['target_number'] for m in micro_metrics])
-        overall_prediction_number = sum([m['prediction_number'] for m in micro_metrics])
+        correct_number = sum([m['correct_number@%d' % k] for m in macro_metrics])
+        overall_target_number = sum([m['target_number'] for m in macro_metrics])
+        overall_prediction_number = sum([m['prediction_number'] for m in macro_metrics])
 
         if real_test_size * k < overall_prediction_number:
             overall_prediction_number = real_test_size * k
 
-        # Compute the Micro Measures, by averaging the micro-score of each prediction
-        overall_score['p@%d' % k] = float(sum([m['p@%d' % k] for m in micro_metrics])) / float(real_test_size)
-        overall_score['r@%d' % k] = float(sum([m['r@%d' % k] for m in micro_metrics])) / float(real_test_size)
-        overall_score['f1@%d' % k] = float(sum([m['f1@%d' % k] for m in micro_metrics])) / float(real_test_size)
+        # Compute the macro Measures, by averaging the macro-score of each prediction
+        overall_score['p@%d' % k] = float(sum([m['p@%d' % k] for m in macro_metrics])) / float(real_test_size)
+        overall_score['r@%d' % k] = float(sum([m['r@%d' % k] for m in macro_metrics])) / float(real_test_size)
+        overall_score['f1@%d' % k] = float(sum([m['f1@%d' % k] for m in macro_metrics])) / float(real_test_size)
 
         # Print basic statistics
         logger.info('%s@%s' % (model_name, dataset_name))
@@ -252,8 +252,8 @@ def evaluate_(text_dir, target_dir, prediction_dir, model_name, dataset_name, do
                     overall_prediction_number, correct_number
         )
         logger.info(output_str)
-        # Print micro-average performance
-        output_str = 'Micro:\t\tP@%d=%f, R@%d=%f, F1@%d=%f' % (
+        # Print macro-average performance
+        output_str = 'macro:\t\tP@%d=%f, R@%d=%f, F1@%d=%f' % (
                     k, overall_score['p@%d' % k],
                     k, overall_score['r@%d' % k],
                     k, overall_score['f1@%d' % k]
@@ -265,32 +265,32 @@ def evaluate_(text_dir, target_dir, prediction_dir, model_name, dataset_name, do
                     overall_score['f1@%d' % k]
         ))
 
-        # Print macro-average performance
-        overall_score['macro_p@%d' % k] = correct_number / float(overall_prediction_number)
-        overall_score['macro_r@%d' % k] = correct_number / float(overall_target_number)
-        if overall_score['macro_p@%d' % k] + overall_score['macro_r@%d' % k] > 0:
-            overall_score['macro_f1@%d' % k] = 2 * overall_score['macro_p@%d' % k] * overall_score[
-                'macro_r@%d' % k] / float(overall_score['macro_p@%d' % k] + overall_score['macro_r@%d' % k])
+        # Print micro-average performance
+        overall_score['micro_p@%d' % k] = correct_number / float(overall_prediction_number)
+        overall_score['micro_r@%d' % k] = correct_number / float(overall_target_number)
+        if overall_score['micro_p@%d' % k] + overall_score['micro_r@%d' % k] > 0:
+            overall_score['micro_f1@%d' % k] = 2 * overall_score['micro_p@%d' % k] * overall_score[
+                'micro_r@%d' % k] / float(overall_score['micro_p@%d' % k] + overall_score['micro_r@%d' % k])
         else:
-            overall_score['macro_f1@%d' % k] = 0
+            overall_score['micro_f1@%d' % k] = 0
 
-        output_str = 'Macro:\t\tP@%d=%f, R@%d=%f, F1@%d=%f' % (
-                    k, overall_score['macro_p@%d' % k],
-                    k, overall_score['macro_r@%d' % k],
-                    k, overall_score['macro_f1@%d' % k]
+        output_str = 'micro:\t\tP@%d=%f, R@%d=%f, F1@%d=%f' % (
+                    k, overall_score['micro_p@%d' % k],
+                    k, overall_score['micro_r@%d' % k],
+                    k, overall_score['micro_f1@%d' % k]
         )
         logger.info(output_str)
         csv_writer.write(', %f, %f, %f' % (
-                    overall_score['macro_p@%d' % k],
-                    overall_score['macro_r@%d' % k],
-                    overall_score['macro_f1@%d' % k]
+                    overall_score['micro_p@%d' % k],
+                    overall_score['micro_r@%d' % k],
+                    overall_score['micro_f1@%d' % k]
         ))
 
         # Compute the binary preference measure (Bpref)
-        overall_score['bpref@%d' % k] = float(sum([m['bpref@%d' % k] for m in micro_metrics])) / float(real_test_size)
+        overall_score['bpref@%d' % k] = float(sum([m['bpref@%d' % k] for m in macro_metrics])) / float(real_test_size)
 
         # Compute the mean reciprocal rank (MRR)
-        overall_score['mrr@%d' % k] = float(sum([m['mrr@%d' % k] for m in micro_metrics])) / float(real_test_size)
+        overall_score['mrr@%d' % k] = float(sum([m['mrr@%d' % k] for m in macro_metrics])) / float(real_test_size)
 
         output_str = '\t\t\tBpref@%d=%f, MRR@%d=%f' % (
                     k, overall_score['bpref@%d' % k],
@@ -368,9 +368,9 @@ def significance_test():
         for dataset_name in test_sets:
             for k in [5, 10]:
                 print('Evaluating on %s@%d' % (dataset_name, k))
-                filepath = config['predict_path'] + '/micro-f@%d-' % (k) + model1 + '-' + dataset_name + '.txt'
+                filepath = config['predict_path'] + '/macro-f@%d-' % (k) + model1 + '-' + dataset_name + '.txt'
                 val1 = load_result(filepath)
-                filepath = config['predict_path'] + '/micro-f@%d-' % (k) + model2 + '-' + dataset_name + '.txt'
+                filepath = config['predict_path'] + '/macro-f@%d-' % (k) + model2 + '-' + dataset_name + '.txt'
                 val2 = load_result(filepath)
                 s_test = scipy.stats.wilcoxon(val1, val2)
                 print(s_test)
