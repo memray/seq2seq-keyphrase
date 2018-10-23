@@ -68,7 +68,7 @@ The training data mentioned above is pickled. You can download here: [seq2seq-ke
 
 If you are just interested in using the KP20k dataset, you can get the data as well: [kp20k.zip](https://drive.google.com/open?id=1ZTQEGZSq06kzlPlOv4yGjbUpoDrNxebR).
 
-The KP20k dataset is released in JSON format. Each data point contains the title, abstract and keywords of a paper.
+The KP20k dataset is released in JSON format. Each data point contains the title, abstract and keywords of a paper. Duplicate papers that also appear in popular test datasets (e.g. Inspec, SemEval) are included in the release. Please be sure to remove them before training.
 
 Part | #(data) 
 --- | --- 
@@ -77,6 +77,8 @@ Validation | 20,000
 Test | 20,000
 
 The raw dataset (without filtering noisy data) is also provided. Please download [here](https://drive.google.com/open?id=0B-7HD48qQzxVQ3hIMW5NY1RWQ0E).
+
+Please be noted that the dataset can only be used for research purposes and all copyrights belong to their respective owners/authors.
 
 Cite
 ==========
