@@ -1,5 +1,5 @@
 # seq2seq-keyphrase
-
+### Note: this repository has been deprecated. Please move to our latest code/data/model release for keyphrase generation at [https://github.com/memray/OpenNMT-kpg-release](https://github.com/memray/OpenNMT-kpg-release). Thank you.
 
 Introduction
 ==========
