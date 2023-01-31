@@ -3,7 +3,7 @@
 
 Data
 ==========
-Check out all datasets at [https://huggingface.co/datasets/memray/](https://huggingface.co/datasets/memray/).
+Check out all datasets at [https://huggingface.co/memray/](https://huggingface.co/memray/).
 
 
 Introduction
